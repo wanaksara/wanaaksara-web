@@ -1,1788 +1,519 @@
-<!DOCTYPE html>
-<html lang="id" class="scroll-smooth">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wanaaksara - Komunitas Literasi Kehutanan & Lingkungan</title>
+import React, { useState, useEffect } from 'react';
+import { 
+  LayoutDashboard, Target, FileText, DollarSign, Calendar as CalendarIcon, 
+  LogOut, CheckCircle, Clock, AlertCircle, Upload, Plus, Users, 
+  ChevronRight, Check, X, FileSignature, Loader2
+} from 'lucide-react';
+
+// URL GOOGLE APPS SCRIPT ANDA (TERBARU)
+const API_URL = 'https://script.google.com/macros/s/AKfycbwy7sQcDsUbCAB-S0xcHsbBFWKKjcFJZyIRFVvGLT-zi7v7UTxVz9qXI24ivXbH8xit/exec';
+
+// --- MAIN APP COMPONENT ---
+export default function App() {
+  const [user, setUser] = useState(null);
+  const [activeTab, setActiveTab] = useState('dashboard');
   
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            forest: {
-              50: '#f2f8f4',
-              100: '#e1efe6',
-              200: '#c5e0cf',
-              300: '#99c9ad',
-              400: '#68aa85',
-              500: '#2d6a4f',
-              600: '#1b4332',
-              700: '#081c15',
-              default: '#2d6a4f'
-            }
-          },
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            serif: ['Just Cosmic', 'DM Serif Display', 'Playfair Display', 'serif']
-          }
-        }
-      }
-    }
-  </script>
-
-  <!-- Google Fonts (DM Serif Display sebagai representasi Just Cosmic, Inter untuk Sans) -->
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400;1,700&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/lucide@latest"></script>
-
-  <!-- Supabase JS Library -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- Custom Glassmorphism Styles & Carousel Transitions -->
-  <style>
-    /* Custom Smooth Scrollbar */
-    ::-webkit-scrollbar {
-      width: 8px;
-    }
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    .dark ::-webkit-scrollbar-track {
-      background: #081c15;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #2d6a4f;
-      border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #1b4332;
-    }
-
-    /* Beautiful Forest Background under frosted glass overlay */
-    body {
-      background-image: url('https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&q=80&w=2000');
-      background-attachment: fixed;
-      background-size: cover;
-      background-position: center;
-    }
-    
-    /* Sliding Nav Active Indicator */
-    #nav-indicator {
-      transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
-    }
-    
-    /* Page Transition fade */
-    .fade-enter {
-      opacity: 0;
-      transform: translateY(12px);
-      transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1), transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-    }
-    .fade-enter-active {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    /* Carousel hidden scrollbar styling */
-    .carousel-container {
-      scrollbar-width: none; /* Firefox */
-    }
-    .carousel-container::-webkit-scrollbar {
-      display: none; /* Chrome, Safari, Opera */
-    }
-  </style>
-</head>
-<body class="text-gray-900 dark:text-gray-100 font-sans transition-colors duration-500 min-h-screen flex flex-col antialiased">
-
-  <!-- BACKGROUND BLUR OVERLAY FOR GLASS THEME (Slightly darker & more blur for extreme clarity) -->
-  <div class="fixed inset-0 bg-white/85 dark:bg-forest-700/90 backdrop-blur-[8px] -z-10 transition-colors duration-500"></div>
-
-  <!-- NOTIFICATION TOAST -->
-  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-forest-600/95 dark:bg-forest-500/95 text-white px-6 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-md">
-    <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-      <i data-lucide="info" class="w-4 h-4 text-white"></i>
-    </div>
-    <span id="toast-message" class="text-sm font-semibold">Notifikasi</span>
-  </div>
-
-  <!-- NAVIGATION HEADER -->
-  <header class="sticky top-0 z-40 bg-white/90 dark:bg-forest-700/95 backdrop-blur-xl border-b border-white/30 dark:border-forest-600/40 shadow-sm transition-all duration-300">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-      
-      <!-- Logo Wanaaksara (Triple click to open admin) -->
-      <div onclick="handleLogoClick()" class="flex items-center gap-3 cursor-pointer select-none group" title="Klik 3 kali cepat untuk masuk Admin Panel">
-        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-forest-600 to-forest-500 flex items-center justify-center shadow-lg shadow-forest-500/20 group-hover:scale-105 active:scale-95 transition-all duration-300">
-          <i data-lucide="trees" class="text-white w-5.5 h-5.5"></i>
-        </div>
-        <div>
-          <span class="text-xl sm:text-2xl font-black font-serif text-forest-600 dark:text-green-400 tracking-wider group-hover:text-forest-500 transition-colors">Wanaaksara</span>
-        </div>
-      </div>
-
-      <!-- Desktop Navigation Menu with dynamic sliding indicator -->
-      <nav class="hidden md:flex items-center gap-2 text-sm font-semibold relative py-1.5 px-2 bg-white/50 dark:bg-forest-600/30 rounded-2xl border border-white/40 dark:border-forest-500/30 shadow-sm" id="desktop-nav">
-        <div id="nav-indicator" class="absolute bg-forest-500 dark:bg-forest-600 rounded-xl shadow-md h-[34px] pointer-events-none z-0"></div>
-        
-        <button onclick="navigateTo('home', this)" class="nav-btn px-4 py-1.5 rounded-xl text-gray-700 dark:text-gray-300 hover:text-forest-600 dark:hover:text-white z-10 transition-colors duration-300" data-page="home">Beranda</button>
-        <button onclick="navigateTo('tentang', this)" class="nav-btn px-4 py-1.5 rounded-xl text-gray-700 dark:text-gray-300 hover:text-forest-600 dark:hover:text-white z-10 transition-colors duration-300" data-page="tentang">Tentang Kami</button>
-        <button onclick="navigateTo('visimisi', this)" class="nav-btn px-4 py-1.5 rounded-xl text-gray-700 dark:text-gray-300 hover:text-forest-600 dark:hover:text-white z-10 transition-colors duration-300" data-page="visimisi">Visi & Misi</button>
-        <button onclick="navigateTo('pimpinan', this)" class="nav-btn px-4 py-1.5 rounded-xl text-gray-700 dark:text-gray-300 hover:text-forest-600 dark:hover:text-white z-10 transition-colors duration-300" data-page="pimpinan">Di Balik Layar</button>
-        <button onclick="navigateTo('kabar', this)" class="nav-btn px-4 py-1.5 rounded-xl text-gray-700 dark:text-gray-300 hover:text-forest-600 dark:hover:text-white z-10 transition-colors duration-300" data-page="kabar">Artikel</button>
-        <button onclick="navigateTo('galeri', this)" class="nav-btn px-4 py-1.5 rounded-xl text-gray-700 dark:text-gray-300 hover:text-forest-600 dark:hover:text-white z-10 transition-colors duration-300" data-page="galeri">Galeri</button>
-      </nav>
-
-      <!-- Action Buttons & Theme Controls -->
-      <div class="flex items-center gap-3">
-        <!-- Theme Toggle Button -->
-        <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl border border-white/40 dark:border-forest-600/40 hover:bg-white/30 dark:hover:bg-forest-600/30 text-gray-600 dark:text-gray-300 active:scale-90 transition-all duration-300">
-          <i id="theme-icon-sun" data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
-          <i id="theme-icon-moon" data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
-        </button>
-
-        <!-- Mobile Menu Toggle Button -->
-        <button onclick="toggleMobileMenu()" class="md:hidden p-2.5 rounded-xl border border-white/40 dark:border-forest-600/40 text-gray-600 dark:text-gray-300 transition-all">
-          <i data-lucide="menu" id="menu-icon-hamburger" class="w-5 h-5 block"></i>
-          <i data-lucide="x" id="menu-icon-close" class="w-5 h-5 hidden"></i>
-        </button>
-      </div>
-    </div>
-
-    <!-- Mobile Navigation Drawer -->
-    <div id="mobile-menu" class="hidden md:hidden bg-white/95 dark:bg-forest-700/95 backdrop-blur-md border-b border-gray-100 dark:border-forest-600/50 overflow-hidden transition-all duration-300">
-      <div class="px-4 pt-2 pb-6 space-y-1 flex flex-col">
-        <button onclick="navigateTo('home')" class="mobile-nav-btn w-full text-left py-3 px-4 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-forest-50 dark:hover:bg-forest-600/50 font-semibold" data-page="home">Beranda</button>
-        <button onclick="navigateTo('tentang')" class="mobile-nav-btn w-full text-left py-3 px-4 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-forest-50 dark:hover:bg-forest-600/50 font-semibold" data-page="tentang">Tentang Kami</button>
-        <button onclick="navigateTo('visimisi')" class="mobile-nav-btn w-full text-left py-3 px-4 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-forest-50 dark:hover:bg-forest-600/50 font-semibold" data-page="visimisi">Visi & Misi</button>
-        <button onclick="navigateTo('pimpinan')" class="mobile-nav-btn w-full text-left py-3 px-4 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-forest-50 dark:hover:bg-forest-600/50 font-semibold" data-page="pimpinan">Di Balik Layar</button>
-        <button onclick="navigateTo('kabar')" class="mobile-nav-btn w-full text-left py-3 px-4 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-forest-50 dark:hover:bg-forest-600/50 font-semibold" data-page="kabar">Artikel</button>
-        <button onclick="navigateTo('galeri')" class="mobile-nav-btn w-full text-left py-3 px-4 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-forest-50 dark:hover:bg-forest-600/50 font-semibold" data-page="galeri">Galeri</button>
-      </div>
-    </div>
-  </header>
-
-  <!-- MAIN CONTENT CONTAINER -->
-  <main class="flex-grow">
-
-    <!-- PAGE 1: HOME (BERANDA) -->
-    <section id="page-home" class="page-section fade-enter fade-enter-active">
-      
-      <!-- HERO SECTION (GAMBAR 1 DESIGN DENGAN FONT JUST COSMIC) -->
-      <div class="relative py-20 sm:py-28 text-center max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="space-y-8">
-          <!-- Styled Badge identical to image 1 -->
-          <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50/95 text-emerald-800 text-xs font-bold tracking-wide border border-emerald-200 shadow-sm mx-auto">
-            <span class="text-[10px]">🌱</span> MENJAGA KELESTARIAN LEWAT AKSARA
-          </div>
-          
-          <!-- Heading matching image 1 typography and accent -->
-          <h1 class="text-4xl sm:text-6xl lg:text-7xl font-extrabold font-serif tracking-tight text-gray-900 dark:text-white leading-[1.12] max-w-5xl mx-auto">
-            Menghubungkan Manusia dengan <br>
-            <span class="text-emerald-600 dark:text-emerald-400 italic font-serif">Rimba Nusantara</span> Melalui Sastra.
-          </h1>
-          
-          <!-- Subtitle -->
-          <p class="text-gray-700 dark:text-gray-200 text-base sm:text-lg max-w-3xl mx-auto leading-relaxed font-semibold">
-            Wana Aksara adalah wadah literasi kehutanan independen. Kami mengedukasi, menyuarakan, dan merawat kelestarian alam nusantara lewat karya tulis dan gerakan nyata.
-          </p>
-          
-          <!-- Premium Rounded Buttons -->
-          <div class="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-            <button onclick="navigateTo('kabar')" class="w-full sm:w-auto px-8 py-4 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold shadow-lg shadow-emerald-700/20 active:scale-95 transition-all flex items-center justify-center gap-2">
-              Mulai Membaca ➔
-            </button>
-            <button onclick="navigateTo('galeri')" class="w-full sm:w-auto px-8 py-4 rounded-full border border-gray-200/50 dark:border-forest-500/50 bg-white/90 dark:bg-forest-600/90 hover:bg-gray-50 dark:hover:bg-forest-500 text-gray-800 dark:text-white font-bold shadow-sm backdrop-blur-sm active:scale-95 transition-all">
-              Jelajah Galeri Visual
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- BERANDA - KUMPULAN ARTIKEL TERBARU (GAMBAR 4 DESIGN) -->
-      <div class="py-20 bg-white/95 dark:bg-forest-700/95 border-t border-white/25 dark:border-forest-600/20 backdrop-blur-sm">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-          <div class="text-center sm:text-left">
-            <h2 class="text-3xl sm:text-4xl font-bold font-serif text-gray-900 dark:text-white tracking-tight">Artikel Terbaru</h2>
-          </div>
-
-          <!-- Vertical stack of horizontal rows matching image 4 -->
-          <div id="home-article-stack" class="space-y-12">
-            <!-- Dynamically populated stacks with fallback support -->
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- PAGE 2: TENTANG KAMI -->
-    <section id="page-tentang" class="page-section hidden py-16 sm:py-24 fade-enter">
-      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-        <div class="text-center space-y-4">
-          <span class="text-forest-500 dark:text-green-400 font-semibold uppercase text-xs tracking-wider">Mengenal Lebih Dekat</span>
-          <h2 class="text-4xl font-bold font-serif text-gray-900 dark:text-white">Tentang Wanaaksara</h2>
-          <div class="w-24 h-1 bg-forest-500 mx-auto rounded-full"></div>
-        </div>
-
-        <div class="prose dark:prose-invert text-gray-700 dark:text-gray-200 space-y-6 leading-relaxed text-lg text-justify bg-white/95 dark:bg-forest-600/95 p-8 rounded-3xl border border-white/30 backdrop-blur shadow-xl font-medium">
-          <p>
-            <strong class="text-forest-600 dark:text-green-300 font-serif text-2xl">Wanaaksara</strong> dibentuk sebagai wadah perjuangan literasi yang fokus pada kelestarian hutan dan keadilan lingkungan. Berakar dari kata <span class="italic text-forest-500 font-medium">Wana</span> yang berarti hutan, dan <span class="italic text-forest-500 font-medium">Aksara</span> yang berarti huruf atau tulisan, kami mendedikasikan gerakan kami untuk menyuarakan keadaan bumi melalui karya ilmiah, jurnalisme lingkungan, serta karya sastra hijau.
-          </p>
-          <p>
-            Terinspirasi dari gerakan keadilan iklim global seperti Greenpeace, Wanaaksara berfokus pada akar rumput di Indonesia. Kami mengedukasi generasi muda agar memahami isu-isu krusial seperti deforestasi, perdagangan karbon, degradasi lahan gambut, hingga hak-hak masyarakat adat yang menjaga rimba Nusantara.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- PAGE 3: VISI & MISI (GAMBAR 3 DESIGN) -->
-    <section id="page-visimisi" class="page-section hidden py-16 sm:py-24 fade-enter">
-      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
-        <div class="text-center space-y-3">
-          <span class="text-emerald-700 dark:text-green-400 font-extrabold uppercase text-xs tracking-widest block">ARAH PERJUANGAN KAMI</span>
-          <h2 class="text-4xl font-extrabold font-serif text-gray-900 dark:text-white inline-block pb-3 relative">
-            Visi & Misi
-            <span class="absolute bottom-0 left-1/4 right-1/4 h-1 bg-emerald-700 rounded-full"></span>
-          </h2>
-        </div>
-
-        <!-- Two glassy card columns matching image 3 -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-stretch">
-          
-          <!-- VISI Card -->
-          <div class="bg-white/95 dark:bg-forest-600/95 border border-white/40 dark:border-forest-500/30 p-10 rounded-[32px] shadow-xl relative overflow-hidden flex flex-col justify-between">
-            <!-- Large Back Watermark V -->
-            <div class="absolute -top-6 -right-6 text-[180px] font-black font-serif text-emerald-100/30 dark:text-emerald-500/10 select-none pointer-events-none z-0">
-              V
-            </div>
-
-            <div class="space-y-6 relative z-10">
-              <div class="w-14 h-14 rounded-2xl bg-emerald-700 text-white flex items-center justify-center shadow-md">
-                <i data-lucide="eye" class="w-7 h-7"></i>
-              </div>
-              <h3 class="text-3xl font-extrabold font-serif text-gray-900 dark:text-white">Visi Luhur</h3>
-              <p class="text-gray-700 dark:text-gray-200 text-base leading-relaxed text-justify font-medium">
-                Menjadi episentrum literasi kehutanan dan lingkungan hidup terkemuka di Indonesia yang menginspirasi generasi muda untuk merawat, membela, dan melestarikan hutan nusantara melalui karya tulis berdaya pengaruh tinggi pada tahun 2030.
-              </p>
-            </div>
-            <div class="border-t border-gray-200/50 dark:border-forest-500/50 pt-6 mt-8 flex items-center gap-3 text-xs font-semibold text-gray-400 relative z-10">
-              <i data-lucide="shield-check" class="text-emerald-600 w-4 h-4"></i> Pelindung Rimba Tropis
-            </div>
-          </div>
-
-          <!-- MISI Card -->
-          <div class="bg-white/95 dark:bg-forest-600/95 border border-white/40 dark:border-forest-500/30 p-10 rounded-[32px] shadow-xl relative overflow-hidden flex flex-col justify-between">
-            <!-- Large Back Watermark M -->
-            <div class="absolute -top-6 -right-6 text-[180px] font-black font-serif text-gray-200/30 dark:text-gray-500/10 select-none pointer-events-none z-0">
-              M
-            </div>
-
-            <div class="space-y-6 relative z-10">
-              <div class="w-14 h-14 rounded-2xl bg-black text-white flex items-center justify-center shadow-md">
-                <i data-lucide="compass" class="w-7 h-7"></i>
-              </div>
-              <h3 class="text-3xl font-extrabold font-serif text-gray-900 dark:text-white">Misi Strategis</h3>
-              
-              <ul class="space-y-6 text-gray-700 dark:text-gray-200 text-sm font-medium">
-                <li class="flex items-start gap-4">
-                  <span class="text-emerald-700 dark:text-emerald-400 font-extrabold text-lg leading-none">01.</span>
-                  <div>
-                    <strong class="text-gray-900 dark:text-white block font-serif text-base mb-1">Mempopulerkan Edukasi Kehutanan:</strong>
-                    Menyederhanakan isu sains ekologi yang rumit agar mudah dipahami, dicintai, dan dikampanyekan oleh publik secara luas.
-                  </div>
-                </li>
-                <li class="flex items-start gap-4">
-                  <span class="text-emerald-700 dark:text-emerald-400 font-extrabold text-lg leading-none">02.</span>
-                  <div>
-                    <strong class="text-gray-900 dark:text-white block font-serif text-base mb-1">Menggerakkan Penulis Muda:</strong>
-                    Mengadakan pelatihan penulisan isu lingkungan hidup untuk melahirkan agen pembela lingkungan baru.
-                  </div>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </section>
-
-    <!-- PAGE 4: DI BALIK LAYAR (LEADERSHIP) -->
-    <section id="page-pimpinan" class="page-section hidden py-16 sm:py-24 fade-enter">
-      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
-        <div class="text-center space-y-4">
-          <span class="text-forest-500 dark:text-green-400 font-semibold uppercase text-xs tracking-wider">Pemimpin & Penggerak</span>
-          <h2 class="text-4xl font-bold font-serif text-gray-900 dark:text-white">Di Balik Wanaaksara</h2>
-          <div class="w-24 h-1 bg-forest-500 mx-auto rounded-full"></div>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          <!-- Leader Card -->
-          <div class="bg-white/95 dark:bg-forest-600/95 backdrop-blur rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-white/30 dark:border-forest-500/30 text-center group">
-            <div class="relative overflow-hidden aspect-square bg-gray-100">
-              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400" alt="Arnetta Rimba" class="w-full h-full object-cover group-hover:scale-105 transition-all duration-500">
-              <div class="absolute inset-0 bg-gradient-to-t from-forest-700/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center p-4">
-                <p class="text-xs text-white italic">"Menyelamatkan alam adalah tugas sejarah generasi kita."</p>
-              </div>
-            </div>
-            <div class="p-6">
-              <h4 class="font-bold text-lg font-serif">Arnetta Rimba</h4>
-              <p class="text-sm text-forest-500 dark:text-green-300 font-medium">Ketua & Pendiri Utama</p>
-            </div>
-          </div>
-          <!-- Leader Card 2 -->
-          <div class="bg-white/95 dark:bg-forest-600/95 backdrop-blur rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-white/30 dark:border-forest-500/30 text-center group">
-            <div class="relative overflow-hidden aspect-square bg-gray-100">
-              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400" alt="Bumi Wijaya" class="w-full h-full object-cover group-hover:scale-105 transition-all duration-500">
-              <div class="absolute inset-0 bg-gradient-to-t from-forest-700/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center p-4">
-                <p class="text-xs text-white italic">"Suara jurnalis lingkungan tak boleh redup."</p>
-              </div>
-            </div>
-            <div class="p-6">
-              <h4 class="font-bold text-lg font-serif">Bumi Wijaya</h4>
-              <p class="text-sm text-forest-500 dark:text-green-300 font-medium">Wakil Ketua & Editor</p>
-            </div>
-          </div>
-          <!-- Leader Card 3 -->
-          <div class="bg-white/95 dark:bg-forest-600/95 backdrop-blur rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-white/30 dark:border-forest-500/30 text-center group">
-            <div class="relative overflow-hidden aspect-square bg-gray-100">
-              <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400" alt="Dewi Lestari" class="w-full h-full object-cover group-hover:scale-105 transition-all duration-500">
-              <div class="absolute inset-0 bg-gradient-to-t from-forest-700/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center p-4">
-                <p class="text-xs text-white italic">"Gerakan literasi adalah senjata terbaik."</p>
-              </div>
-            </div>
-            <div class="p-6">
-              <h4 class="font-bold text-lg font-serif">Dewi Lestari</h4>
-              <p class="text-sm text-forest-500 dark:text-green-300 font-medium">Sekretaris Jenderal</p>
-            </div>
-          </div>
-          <!-- Leader Card 4 -->
-          <div class="bg-white/95 dark:bg-forest-600/95 backdrop-blur rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-white/30 dark:border-forest-500/30 text-center group">
-            <div class="relative overflow-hidden aspect-square bg-gray-100">
-              <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=400" alt="Fajar Lestari" class="w-full h-full object-cover group-hover:scale-105 transition-all duration-500">
-              <div class="absolute inset-0 bg-gradient-to-t from-forest-700/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center p-4">
-                <p class="text-xs text-white italic">"Setiap rupiah adalah benih pohon nyata."</p>
-              </div>
-            </div>
-            <div class="p-6">
-              <h4 class="font-bold text-lg font-serif">Fajar Lestari</h4>
-              <p class="text-sm text-forest-500 dark:text-green-300 font-medium">Bendahara</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- PAGE 5: ARTIKEL (CAROUSEL & SEARCH - GAMBAR 5 DESIGN) -->
-    <section id="page-kabar" class="page-section hidden py-16 sm:py-24 fade-enter">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-        
-        <!-- Header Carousel Bar with See all stories link -->
-        <div class="flex justify-between items-end border-b border-gray-200/50 dark:border-forest-500/50 pb-4">
-          <h2 class="text-4xl font-extrabold font-serif text-gray-900 dark:text-white">Artikel</h2>
-          <button onclick="scrollToSearchSection()" class="text-sm font-semibold text-emerald-700 dark:text-emerald-400 hover:underline">
-            See all stories &gt;
-          </button>
-        </div>
-
-        <!-- Carousel Container with Overlay Navigation Controls matching image 5 -->
-        <div class="relative group">
-          <!-- Left Chevron Button -->
-          <button onclick="scrollCarouselLeft()" class="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white dark:bg-forest-600 shadow-xl border border-gray-100 dark:border-forest-500/50 flex items-center justify-center hover:scale-110 active:scale-95 transition-all">
-            <i data-lucide="chevron-left" class="w-5 h-5 text-gray-700 dark:text-gray-100"></i>
-          </button>
-          
-          <!-- Right Chevron Button -->
-          <button onclick="scrollCarouselRight()" class="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white dark:bg-forest-600 shadow-xl border border-gray-100 dark:border-forest-500/50 flex items-center justify-center hover:scale-110 active:scale-95 transition-all">
-            <i data-lucide="chevron-right" class="w-5 h-5 text-gray-700 dark:text-gray-100"></i>
-          </button>
-
-          <!-- Carousel cards holder -->
-          <div id="carousel-articles-wrapper" class="carousel-container flex gap-6 overflow-x-auto py-4 scroll-smooth px-2">
-            <!-- Dynamically populated carousel cards -->
-          </div>
-        </div>
-
-        <!-- Search & Filter bar for extended listing -->
-        <div class="space-y-6 pt-12" id="articles-search-anchor">
-          <div class="flex flex-col sm:flex-row gap-4 justify-between items-center bg-white/95 dark:bg-forest-600/90 p-4 rounded-3xl border border-white/40 dark:border-forest-500/20 shadow-sm">
-            <div class="relative w-full sm:w-80">
-              <input type="text" id="article-search" oninput="filterArticles()" placeholder="Cari tulisan..." class="w-full pl-11 pr-4 py-3 rounded-2xl border border-gray-200 bg-white dark:bg-forest-700 focus:ring-2 focus:ring-forest-500 focus:outline-none text-sm transition-all shadow-sm">
-              <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-4 top-4"></i>
-            </div>
-            <div class="flex items-center gap-2 text-xs text-gray-400 font-bold">
-              <span class="w-2 h-2 rounded-full bg-forest-500 animate-ping"></span> Live Supabase Database
-            </div>
-          </div>
-
-          <!-- Filter tags bar -->
-          <div class="flex flex-wrap items-center gap-2" id="category-tags-container"></div>
-        </div>
-
-        <!-- Regular fallback Grid View list -->
-        <div id="articles-grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <!-- Dynamically filtered lists -->
-        </div>
-
-      </div>
-    </section>
-
-    <!-- PAGE 6: GALERI -->
-    <section id="page-galeri" class="page-section hidden py-16 sm:py-24 bg-white/95 dark:bg-forest-700/95 backdrop-blur-sm">
-      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-        <div class="text-center space-y-4">
-          <span class="text-forest-500 dark:text-green-400 font-semibold uppercase text-xs tracking-wider">Lensa Aksi Lapangan</span>
-          <h2 class="text-4xl font-bold font-serif text-gray-900 dark:text-white">Galeri Wanaaksara</h2>
-          <div class="w-24 h-1 bg-forest-500 mx-auto rounded-full"></div>
-        </div>
-
-        <!-- Gallery Grid -->
-        <div id="gallery-container" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
-          <!-- Dynamically Loaded Images from Supabase -->
-          <div class="col-span-full py-12 text-center text-gray-400">
-            <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-t-transparent border-forest-500 mb-2"></div>
-            <p>Memuat galeri foto...</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- NEW DETAILED FULL SCREEN EDITORIAL ARTICLE PAGE -->
-    <section id="page-article-view" class="page-section hidden py-10 fade-enter">
-      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        
-        <!-- Breadcrumbs & Dynamic Back navigation button -->
-        <div class="flex flex-wrap items-center justify-between gap-4 border-b border-gray-200/50 dark:border-forest-500/20 pb-4">
-          <button onclick="goBackFromArticle()" class="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 transition-colors group">
-            <i data-lucide="arrow-left" class="w-4 h-4 group-hover:-translate-x-1 transition-transform"></i> Kembali
-          </button>
-          
-          <div class="text-xs text-gray-400 dark:text-gray-300 font-bold uppercase tracking-wider">
-            Wanaaksara / <span id="view-article-category" class="text-emerald-700 dark:text-emerald-400">Kategori</span>
-          </div>
-        </div>
-
-        <!-- Large Premium Header Image -->
-        <div class="w-full aspect-video rounded-[32px] overflow-hidden shadow-xl bg-gray-100 border border-white/40 dark:border-forest-500/20">
-          <img id="view-article-image" src="" alt="Artikel Detail Gambar" class="w-full h-full object-cover">
-        </div>
-
-        <!-- Editorial Info Blocks -->
-        <div class="space-y-4">
-          <h1 id="view-article-title" class="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-serif text-gray-900 dark:text-white leading-[1.2]">
-            Judul Artikel
-          </h1>
-
-          <div id="view-article-meta" class="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-semibold text-gray-400 border-y border-gray-100 dark:border-forest-500/10 py-3">
-            <!-- Placeholder for dynamic icon dates & times -->
-          </div>
-        </div>
-
-        <!-- High contrast content column -->
-        <article class="bg-white/95 dark:bg-forest-600/95 border border-gray-100 dark:border-forest-500/20 shadow-xl rounded-[32px] p-8 sm:p-10">
-          <div id="view-article-content" class="text-gray-800 dark:text-gray-100 leading-[1.75] text-justify space-y-6 text-base sm:text-lg font-sans">
-            <!-- Parsed rich text contents -->
-          </div>
-        </article>
-
-        <!-- Final Footer inside View page -->
-        <div class="pt-6 flex justify-center">
-          <button onclick="goBackFromArticle()" class="px-8 py-3 rounded-full bg-emerald-700 text-white hover:bg-emerald-800 font-bold shadow-md active:scale-95 transition-all">
-            Kembali ke Halaman Sebelumnya
-          </button>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- GALLERY LIGHTBOX -->
-    <div id="gallery-modal" class="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 hidden backdrop-blur-sm" onclick="closeGalleryLightbox()">
-      <button class="absolute top-4 right-4 text-white p-3 hover:bg-white/10 rounded-full transition-all">
-        <i data-lucide="x" class="w-6 h-6"></i>
-      </button>
-      <div class="max-w-4xl max-h-[80vh] flex flex-col items-center gap-4" onclick="event.stopPropagation()">
-        <img id="gallery-lightbox-img" src="" alt="Zoom" class="max-w-full max-h-[70vh] rounded-2xl object-contain shadow-2xl scale-95 transition-transform duration-300">
-        <p id="gallery-lightbox-caption" class="text-white text-center font-medium bg-black/40 px-6 py-2.5 rounded-xl backdrop-blur"></p>
-      </div>
-    </div>
-
-    <!-- ADMIN LOGIN MODAL -->
-    <div id="admin-login-modal" class="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 hidden backdrop-blur-sm">
-      <div class="bg-white dark:bg-forest-600 rounded-[32px] p-8 max-w-md w-full shadow-2xl border border-white/30 space-y-6 scale-95 transition-transform duration-300" id="admin-login-card">
-        <div class="text-center space-y-2">
-          <div class="w-14 h-14 bg-forest-100 dark:bg-forest-700 text-forest-500 dark:text-green-300 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
-            <i data-lucide="shield-alert" class="w-7 h-7"></i>
-          </div>
-          <h3 class="text-2xl font-bold font-serif text-forest-600 dark:text-green-300">Wanaaksara Admin</h3>
-          <p class="text-xs text-gray-400 font-medium">Masukkan password verifikasi admin.</p>
-        </div>
-        <div class="space-y-4">
-          <div>
-            <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Password Keamanan</label>
-            <input type="password" id="admin-password" placeholder="••••••••" class="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-forest-500 bg-gray-50 dark:bg-forest-700 focus:outline-none focus:ring-2 focus:ring-forest-500 text-sm">
-          </div>
-          <button onclick="verifyAdmin()" class="w-full py-3.5 rounded-2xl bg-forest-500 hover:bg-forest-600 text-white font-semibold shadow-md active:scale-95 transition-all">
-            Verifikasi Akses
-          </button>
-          <button onclick="closeAdminLogin()" class="w-full py-2 rounded-xl text-xs text-gray-400 hover:text-gray-500 transition-all font-semibold">
-            Batal
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ADMIN PANEL DASHBOARD -->
-    <section id="page-admin-dashboard" class="page-section hidden py-16 sm:py-24 fade-enter">
-      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-200 dark:border-forest-600 pb-6 gap-4">
-          <div>
-            <span class="text-xs font-semibold bg-forest-100 dark:bg-forest-600 text-forest-600 dark:text-green-300 px-3 py-1 rounded-full uppercase shadow-sm">Sistem Terintegrasi Supabase</span>
-            <h2 class="text-3xl font-serif font-bold text-gray-950 dark:text-white mt-2">Dashboard Konten Admin</h2>
-          </div>
-          <button onclick="logoutAdmin()" class="px-5 py-2.5 rounded-2xl border border-red-500 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm font-semibold transition-all flex items-center gap-2">
-            <i data-lucide="log-out" class="w-4 h-4"></i> Keluar Dashboard
-          </button>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          <!-- Column Left: Form Article & Gallery Manager -->
-          <div class="lg:col-span-8 bg-white dark:bg-forest-600 rounded-[32px] p-6 sm:p-8 border border-white/30 shadow-xl space-y-8">
-            
-            <!-- Article Submiter form -->
-            <div class="space-y-6">
-              <div class="flex items-center gap-3 border-b border-gray-100 dark:border-forest-500 pb-3">
-                <i data-lucide="plus-circle" class="text-forest-500"></i>
-                <h3 class="font-bold text-lg" id="form-title">Tulis / Edit Artikel Baru</h3>
-              </div>
-
-              <input type="hidden" id="edit-article-id" value="">
-
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Judul Artikel</label>
-                  <input type="text" id="article-title" placeholder="cth: Jakarta, Akankah Menyala?" class="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-forest-500 bg-gray-50/50 dark:bg-forest-700 focus:outline-none focus:ring-2 focus:ring-forest-500 text-sm">
-                </div>
-                <div>
-                  <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Kategori / Topik</label>
-                  <input type="text" id="article-category" placeholder="cth: Artikel • #Sosial dan Ekonomi #Aktivisme" class="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-forest-500 bg-gray-50/50 dark:bg-forest-700 focus:outline-none focus:ring-2 focus:ring-forest-500 text-sm">
-                </div>
-              </div>
-
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Tanggal Publikasi</label>
-                  <input type="date" id="article-date" class="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-forest-500 bg-gray-50/50 dark:bg-forest-700 focus:outline-none focus:ring-2 focus:ring-forest-500 text-sm">
-                </div>
-                <div>
-                  <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Waktu Publikasi</label>
-                  <input type="time" id="article-time" class="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-forest-500 bg-gray-50/50 dark:bg-forest-700 focus:outline-none focus:ring-2 focus:ring-forest-500 text-sm">
-                </div>
-              </div>
-
-              <div>
-                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Gambar Cover Artikel</label>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-                  <div>
-                    <input type="file" id="article-image-file" accept="image/*" onchange="convertImageToBase64('article')" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-forest-50 file:text-forest-700 hover:file:bg-forest-100 cursor-pointer">
-                  </div>
-                  <div>
-                    <input type="text" id="article-image-url" placeholder="Atau tempel URL Gambar langsung..." class="w-full px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-forest-500 bg-gray-50/50 dark:bg-forest-700 focus:outline-none text-xs">
-                  </div>
-                </div>
-              </div>
-
-              <div class="space-y-2">
-                <div class="flex items-center justify-between">
-                  <label class="block text-[10px] font-bold text-gray-400 uppercase">Konten / Isi Artikel</label>
-                  <div class="flex gap-2">
-                    <button type="button" onclick="insertFormatting('bold')" class="px-2.5 py-1 bg-gray-100 dark:bg-forest-500 rounded-lg text-xs hover:bg-forest-100 dark:hover:bg-forest-400 font-bold" title="Tebal">B</button>
-                    <button type="button" onclick="insertFormatting('list')" class="px-2.5 py-1 bg-gray-100 dark:bg-forest-500 rounded-lg text-xs hover:bg-forest-100 dark:hover:bg-forest-400" title="Daftar Angka">1.</button>
-                    <button type="button" onclick="insertFormatting('br')" class="px-2.5 py-1 bg-gray-100 dark:bg-forest-500 rounded-lg text-xs hover:bg-forest-100 dark:hover:bg-forest-400" title="Paragraf Baru">Mulai Baris</button>
-                  </div>
-                </div>
-                <textarea id="article-content" rows="8" placeholder="Tulis rincian narasi di sini... Gunakan tombol format untuk menebalkan teks (**teks**) atau membuat list (1., 2.)." class="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-forest-500 bg-gray-50/50 dark:bg-forest-700 focus:outline-none focus:ring-2 focus:ring-forest-500 text-sm"></textarea>
-              </div>
-
-              <div class="flex items-center gap-6 font-semibold text-sm">
-                <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" id="article-featured" class="w-4.5 h-4.5 text-forest-500 border-gray-300 rounded focus:ring-forest-500 bg-gray-50">
-                  <span>Jadikan Sorotan Utama (Slider)</span>
-                </label>
-              </div>
-
-              <div class="flex gap-3">
-                <button onclick="saveArticle()" class="flex-grow py-3.5 rounded-2xl bg-forest-500 hover:bg-forest-600 text-white font-semibold shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-                  <i data-lucide="save" class="w-5 h-5"></i> Simpan Artikel
-                </button>
-                <button id="cancel-edit-btn" onclick="resetArticleForm()" class="hidden px-5 py-3 rounded-2xl border border-gray-300 text-gray-500 hover:bg-gray-50 dark:hover:bg-forest-500 transition-all font-semibold">
-                  Batal
-                </button>
-              </div>
-            </div>
-
-            <!-- Upload to Gallery Submiter -->
-            <div class="border-t border-gray-100 dark:border-forest-500/50 pt-8 space-y-6">
-              <div class="flex items-center gap-3 border-b border-gray-100 dark:border-forest-500 pb-3">
-                <i data-lucide="image" class="text-forest-500"></i>
-                <h3 class="font-bold text-lg">Tambah Foto ke Galeri</h3>
-              </div>
-
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-                <div>
-                  <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Pilih File Foto</label>
-                  <input type="file" id="gallery-image-file" accept="image/*" onchange="convertImageToBase64('gallery')" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-forest-50 file:text-forest-700 hover:file:bg-forest-100 cursor-pointer">
-                </div>
-                <div>
-                  <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Atau Tempel URL Gambar</label>
-                  <input type="text" id="gallery-image-url" placeholder="https://unsplash.com/..." class="w-full px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-forest-500 bg-gray-50/50 dark:bg-forest-700 focus:outline-none text-xs">
-                </div>
-              </div>
-
-              <div>
-                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Keterangan / Caption Foto</label>
-                <input type="text" id="gallery-caption" placeholder="cth: Relawan Wanaaksara menanam bibit bakau di Karimunjawa." class="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-forest-500 bg-gray-50/50 dark:bg-forest-700 focus:outline-none focus:ring-2 focus:ring-forest-500 text-sm">
-              </div>
-
-              <button onclick="saveGallery()" class="w-full py-3 rounded-2xl bg-forest-500 hover:bg-forest-600 text-white font-semibold active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-                <i data-lucide="upload-cloud" class="w-5 h-5"></i> Unggah Foto Galeri
-              </button>
-            </div>
-
-          </div>
-
-          <!-- Column Right: Active Content List (Quick Actions Edit/Delete) -->
-          <div class="lg:col-span-4 space-y-6">
-            <div class="bg-white/70 dark:bg-forest-600/70 backdrop-blur rounded-[32px] p-6 border border-white/30 shadow-xl space-y-6">
-              <h3 class="font-bold text-base flex items-center gap-2 border-b border-gray-100 dark:border-forest-500 pb-3">
-                <i data-lucide="edit-3" class="text-forest-500"></i> Kelola Artikel Terbit
-              </h3>
-              <div id="admin-articles-list" class="space-y-4 max-h-[400px] overflow-y-auto pr-2 text-gray-800 dark:text-gray-100">
-                <p class="text-xs text-gray-400 text-center">Memuat artikel...</p>
-              </div>
-            </div>
-
-            <div class="bg-white/70 dark:bg-forest-600/70 backdrop-blur rounded-[32px] p-6 border border-white/30 shadow-xl space-y-6">
-              <h3 class="font-bold text-base flex items-center gap-2 border-b border-gray-100 dark:border-forest-500 pb-3">
-                <i data-lucide="trash-2" class="text-forest-500"></i> Kelola Galeri Foto
-              </h3>
-              <div id="admin-gallery-list" class="grid grid-cols-3 gap-2.5 max-h-[250px] overflow-y-auto pr-2">
-                <p class="text-xs text-gray-400 col-span-3 text-center">Memuat galeri...</p>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- FOOTER -->
-  <footer class="bg-forest-700/90 backdrop-blur-md text-white border-t border-forest-600/30 pt-16 pb-8 transition-colors duration-300">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-12 pb-12 border-b border-forest-600/30">
-        <!-- Brand Block -->
-        <div class="md:col-span-5 space-y-4">
-          <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-forest-500 flex items-center justify-center">
-              <i data-lucide="trees" class="text-white w-5 h-5"></i>
-            </div>
-            <span class="text-xl font-bold font-serif tracking-wider">Wanaaksara</span>
-          </div>
-          <p class="text-gray-300 text-sm leading-relaxed max-w-sm font-medium">
-            Wanaaksara adalah gerakan literasi kritis kehutanan dan penyelamatan lingkungan. Kami berkomitmen menyebarkan wawasan ekologi ke seluruh pelosok negeri.
-          </p>
-        </div>
-
-        <!-- Links Block -->
-        <div class="md:col-span-3 space-y-4">
-          <h4 class="font-bold font-serif text-green-300 tracking-wide text-sm uppercase">Navigasi Cepat</h4>
-          <ul class="space-y-2 text-sm text-gray-300">
-            <li><button onclick="navigateTo('home')" class="hover:text-white transition-colors">Beranda</button></li>
-            <li><button onclick="navigateTo('tentang')" class="hover:text-white transition-colors">Tentang Kami</button></li>
-            <li><button onclick="navigateTo('visimisi')" class="hover:text-white transition-colors">Visi & Misi</button></li>
-            <li><button onclick="navigateTo('kabar')" class="hover:text-white transition-colors">Artikel</button></li>
-          </ul>
-        </div>
-
-        <!-- Contact/Newsletter Block -->
-        <div class="md:col-span-4 space-y-4">
-          <h4 class="font-bold font-serif text-green-300 tracking-wide text-sm uppercase">Kontak & Aspirasi</h4>
-          <p class="text-xs text-gray-300">Hubungi kami atau kirimkan aspirasi tulisan lingkungan Anda.</p>
-          <div class="flex flex-col gap-2 text-sm text-gray-300">
-            <span class="flex items-center gap-2"><i data-lucide="mail" class="w-4 h-4 text-forest-500"></i> redaksi@wanaaksara.org</span>
-            <span class="flex items-center gap-2"><i data-lucide="phone" class="w-4 h-4 text-forest-500"></i> +62-812-3456-7890</span>
-            <span class="flex items-center gap-2"><i data-lucide="map-pin" class="w-4 h-4 text-forest-500"></i> Bogor, Jawa Barat, Indonesia</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="pt-8 flex flex-col sm:flex-row justify-between items-center text-xs text-gray-400 gap-4">
-        <span>&copy; 2026 Komunitas Wanaaksara. Seluruh Hak Cipta Dilindungi.</span>
-        <div class="flex gap-6">
-          <a href="#" class="hover:text-white transition-colors">Kebijakan Privasi</a>
-          <a href="#" class="hover:text-white transition-colors">Syarat Penggunaan</a>
-        </div>
-      </div>
-    </div>
-  </footer>
-
-  <!-- MAIN APP LOGIC JAVASCRIPT -->
-  <script>
-    // SUPABASE CREDENTIALS PROVIDED
-    const SUPABASE_URL = "https://nghhgsdesffhqkwtmuzb.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5naGhnc2Rlc2ZmaHFrd3RtdXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NTk0OTAsImV4cCI6MjA5ODAzNTQ5MH0.oG2P2PujX1q_qt1FIDP8lr-Dt0Y638mvGrM8izM0_vk";
-    
-    // Initialize Supabase Client
-    let supabaseClient = null;
+  // Global States
+  const [tasks, setTasks] = useState([]);
+  const [surat, setSurat] = useState([]);
+  const [dana, setDana] = useState([]);
+  const [isLoadingData, setIsLoadingData] = useState(false);
+  
+  // Fungsi untuk mengambil data dari Google Sheet saat user login
+  const fetchAllData = async (loggedInUser) => {
+    setIsLoadingData(true);
     try {
-      if (typeof supabase !== 'undefined') {
-        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-      }
-    } catch (e) {
-      console.warn("Supabase initialization error, falling back to local memory storage:", e);
-    }
-
-    // STATE MANAGEMENT
-    let appState = {
-      currentPage: 'home',
-      previousPage: 'home',
-      darkMode: false,
-      logoClickCount: 0,
-      logoClickTimer: null,
-      isAdmin: false,
-      articles: [],
-      gallery: [],
-      categories: ['Semua'],
-      selectedCategory: 'Semua',
-      currentSlideIdx: 0,
-      sliderInterval: null,
-      sliderPaused: false
-    };
-
-    // MOCK DATA BASED DIRECTLY ON DESIGN IMAGES (Fallback and offline load support)
-    const MOCK_ARTICLES = [
-      {
-        id: "mock-1",
-        title: "Jakarta, Akankah Menyala?",
-        content: "Mewujudkan Jakarta yang bukan hanya \"menyala\" untuk generasi sekarang, tapi juga generasi yang akan datang.",
-        category: "Artikel • #Sosial dan Ekonomi #Aktivisme",
-        image_url: "https://images.unsplash.com/photo-1596436889106-be35e843f974?auto=format&fit=crop&q=80&w=1000",
-        published_at: "2026-06-22T10:00:00",
-        is_featured: true,
-        author: "Khalisah Khalid"
-      },
-      {
-        id: "mock-2",
-        title: "Proses Hukum Gugatan Jalan 135 Kilometer Masih Berlangsung, Pembangunan Jalan Harus Dihentikan",
-        content: "Hakim memerintahkan pembangunan jalan dihentikan karena perkara sedang berjalan di persidangan.",
-        category: "Hutan • #Hutan",
-        image_url: "https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&q=80&w=1000",
-        published_at: "2026-06-10T09:30:00",
-        is_featured: true,
-        author: "Greenpeace Indonesia"
-      },
-      {
-        id: "mock-3",
-        title: "Relawan adalah Pahlawan: Ceritaku Menjadi Pejuang...",
-        content: "Kisah Haifa menjadi relawan Greenpeace.",
-        category: "Relawan",
-        image_url: "https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&q=80&w=1000",
-        published_at: "2026-06-22T14:00:00",
-        is_featured: false,
-        author: "Greenpeace Indonesia"
-      },
-      {
-        id: "mock-4",
-        title: "100 hari setelah serangan ke Iran: Siapa yang membayar,...",
-        content: "Serangan tersebut telah diprediksikan akan memantik krisis energi terburuk dalam...",
-        category: "Artikel",
-        image_url: "https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&q=80&w=1000",
-        published_at: "2026-06-08T15:45:00",
-        is_featured: false,
-        author: "Mehdi Leman"
-      },
-      {
-        id: "mock-5",
-        title: "Menang! PLN Harus Buka Data Emisi PLTU Atas Putusan...",
-        content: "Ini menjadi salah satu kemenangan dari upaya panjang masyarakat sipil...",
-        category: "Iklim dan Energi",
-        image_url: "https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&q=80&w=1000",
-        published_at: "2026-04-23T11:20:00",
-        is_featured: true,
-        author: "Greenpeace Indonesia"
-      }
-    ];
-
-    const MOCK_GALLERY = [
-      { id: "g-1", image_url: "https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&q=80&w=600", caption: "Diskusi pemuda tentang rimba nusantara" },
-      { id: "g-2", image_url: "https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&q=80&w=600", caption: "Hutan hujan tropis di Pulau Kalimantan" },
-      { id: "g-3", image_url: "https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&q=80&w=600", caption: "Revegetasi lahan gundul bersama relawan" }
-    ];
-
-    // ONLOAD SETUP
-    window.onload = async () => {
-      lucide.createIcons();
-      initTheme();
-      await syncData();
-      startSliderAutoPlay();
-      setupFormDefaults();
-      initNavIndicator();
-      initHeroTilt();
-
-      // Re-trigger global sync to fetch live articles from other active devices
-      setInterval(async () => {
-        await syncData();
-      }, 15000); 
-    };
-
-    // FORM SETUP
-    function setupFormDefaults() {
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('article-date').value = today;
-      const now = new Date();
-      const time = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
-      document.getElementById('article-time').value = time;
-    }
-
-    // THEME SETUP
-    function initTheme() {
-      if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        document.documentElement.classList.add('dark');
-        appState.darkMode = true;
-      } else {
-        document.documentElement.classList.remove('dark');
-        appState.darkMode = false;
-      }
-    }
-
-    function toggleDarkMode() {
-      if (document.documentElement.classList.contains('dark')) {
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
-        appState.darkMode = false;
-      } else {
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
-        appState.darkMode = true;
-      }
-      setTimeout(initNavIndicator, 150);
-    }
-
-    // TOAST NOTIFIER
-    function showToast(message) {
-      const toast = document.getElementById('toast');
-      const toastMessage = document.getElementById('toast-message');
-      toastMessage.innerText = message;
-      toast.classList.remove('translate-y-20', 'opacity-0');
-      toast.classList.add('translate-y-0', 'opacity-100');
+      const response = await fetch(`${API_URL}?action=getAllData&email=${loggedInUser.email}&role=${loggedInUser.role}`);
+      const data = await response.json();
       
-      setTimeout(() => {
-        toast.classList.remove('translate-y-0', 'opacity-100');
-        toast.classList.add('translate-y-20', 'opacity-0');
-      }, 3500);
-    }
-
-    // ACTIVE INDICATOR NAV TRANSITION
-    function initNavIndicator() {
-      const activeBtn = document.querySelector(`#desktop-nav button[data-page="${appState.currentPage}"]`);
-      if (activeBtn) {
-        moveIndicator(activeBtn);
+      if (data.status === 'success') {
+        setTasks(data.data.tasks || []);
+        setSurat(data.data.surat || []);
+        setDana(data.data.dana || []);
       }
+    } catch (error) {
+      console.error("Gagal mengambil data:", error);
     }
+    setIsLoadingData(false);
+  };
 
-    function moveIndicator(element) {
-      const indicator = document.getElementById('nav-indicator');
-      if (!indicator || !element) return;
-      indicator.style.width = `${element.offsetWidth}px`;
-      indicator.style.left = `${element.offsetLeft}px`;
+  useEffect(() => {
+    if (user) {
+      fetchAllData(user);
     }
+  }, [user]);
 
-    document.querySelectorAll('#desktop-nav .nav-btn').forEach(btn => {
-      btn.addEventListener('mouseenter', function() {
-        moveIndicator(this);
-      });
-    });
-
-    document.getElementById('desktop-nav').addEventListener('mouseleave', function() {
-      initNavIndicator();
-    });
-
-    // NAVIGATION
-    function navigateTo(pageId, element) {
-      const currentSection = document.getElementById(`page-${appState.currentPage}`);
-      if (currentSection) {
-        currentSection.classList.add('hidden');
-      }
-
-      appState.currentPage = pageId;
-
-      const targetPage = document.getElementById(`page-${pageId}`);
-      if (targetPage) {
-        targetPage.classList.remove('hidden');
-        targetPage.classList.add('fade-enter');
-        setTimeout(() => {
-          targetPage.classList.add('fade-enter-active');
-        }, 30);
-      }
-
-      // Update Desktop Nav style states
-      document.querySelectorAll('#desktop-nav .nav-btn').forEach(btn => {
-        if (btn.getAttribute('data-page') === pageId) {
-          btn.classList.add('text-white');
-          btn.classList.remove('text-gray-700', 'dark:text-gray-300');
-        } else {
-          btn.classList.remove('text-white');
-          btn.classList.add('text-gray-700', 'dark:text-gray-300');
-        }
-      });
-
-      if (element) {
-        moveIndicator(element);
-      } else {
-        initNavIndicator();
-      }
-
-      // Close mobile drawer
-      const mobileMenu = document.getElementById('mobile-menu');
-      const hamburger = document.getElementById('menu-icon-hamburger');
-      const close = document.getElementById('menu-icon-close');
-      mobileMenu.classList.add('hidden');
-      hamburger.classList.remove('hidden');
-      close.classList.add('hidden');
-
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function toggleMobileMenu() {
-      const mobileMenu = document.getElementById('mobile-menu');
-      const hamburger = document.getElementById('menu-icon-hamburger');
-      const close = document.getElementById('menu-icon-close');
-
-      if (mobileMenu.classList.contains('hidden')) {
-        mobileMenu.classList.remove('hidden');
-        hamburger.classList.add('hidden');
-        close.classList.remove('hidden');
-      } else {
-        mobileMenu.classList.add('hidden');
-        hamburger.classList.remove('hidden');
-        close.classList.add('hidden');
-      }
-    }
-
-    // SCROLL LINK FOR CAROUSEL TO FILTER SEARCH
-    function scrollToSearchSection() {
-      const el = document.getElementById('articles-search-anchor');
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    // HERO CARD TILT
-    function initHeroTilt() {
-      const card = document.querySelector('#hero-tilt-card .interactive-card');
-      const container = document.getElementById('hero-tilt-card');
-      if (!card || !container) return;
-
-      container.addEventListener('mousemove', (e) => {
-        const rect = container.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        
-        const xPercent = (x / rect.width) * 100;
-        const yPercent = (y / rect.height) * 100;
-        
-        const rotX = ((yPercent - 50) / 50) * -6; 
-        const rotY = ((xPercent - 50) / 50) * 6;
-        
-        card.style.transform = `perspective(1000px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale3d(1.02, 1.02, 1.02)`;
-      });
-
-      container.addEventListener('mouseleave', () => {
-        card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
-      });
-    }
-
-    // TRIPLE LOGO CLICK SECRETS
-    function handleLogoClick() {
-      appState.logoClickCount++;
-      clearTimeout(appState.logoClickTimer);
+  // Login Handler (Real ke Spreadsheet)
+  const handleLogin = async (email) => {
+    try {
+      const res = await fetch(`${API_URL}?action=login&email=${email}`);
+      const data = await res.json();
       
-      if (appState.logoClickCount >= 3) {
-        appState.logoClickCount = 0;
-        if (appState.isAdmin) {
-          navigateTo('admin-dashboard');
-          showToast("Kembali ke panel admin!");
-        } else {
-          const modal = document.getElementById('admin-login-modal');
-          const card = document.getElementById('admin-login-card');
-          modal.classList.remove('hidden');
-          setTimeout(() => {
-            card.classList.remove('scale-95');
-          }, 10);
-        }
+      if (data.status === 'success') {
+        setUser(data.user);
       } else {
-        appState.logoClickTimer = setTimeout(() => {
-          appState.logoClickCount = 0;
-        }, 1000); 
+        alert(data.message || 'Akses Ditolak: Email Anda tidak terdaftar di Database Spreadsheet (Sheet "Users").');
       }
+    } catch (error) {
+      alert('Terjadi kesalahan jaringan atau Apps Script belum di-deploy dengan benar.');
+      console.error(error);
     }
+  };
 
-    function closeAdminLogin() {
-      const modal = document.getElementById('admin-login-modal');
-      const card = document.getElementById('admin-login-card');
-      card.classList.add('scale-95');
-      setTimeout(() => {
-        modal.classList.add('hidden');
-        document.getElementById('admin-password').value = "";
-      }, 200);
-    }
+  if (!user) {
+    return <LoginScreen onLogin={handleLogin} />;
+  }
 
-    function verifyAdmin() {
-      const pin = document.getElementById('admin-password').value;
-      if (pin === 'wanaaksara2026') {
-        appState.isAdmin = true;
-        closeAdminLogin();
-        navigateTo('admin-dashboard');
-        showToast("Verifikasi Sukses. Selamat datang, pimpinan!");
-      } else {
-        showToast("Password verifikasi salah!");
-      }
-    }
-
-    function logoutAdmin() {
-      appState.isAdmin = false;
-      navigateTo('home');
-      showToast("Berhasil keluar dari mode Admin.");
-    }
-
-    // IMAGE FILE UPLOAD
-    function convertImageToBase64(type) {
-      const fileInput = document.getElementById(type === 'article' ? 'article-image-file' : 'gallery-image-file');
-      const urlInput = document.getElementById(type === 'article' ? 'article-image-url' : 'gallery-image-url');
-      const file = fileInput.files[0];
-
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          urlInput.value = e.target.result; 
-          showToast("Gambar berhasil diproses!");
-        };
-        reader.readAsDataURL(file);
-      }
-    }
-
-    // TEXT EDITOR INJECTOR
-    function insertFormatting(type) {
-      const textarea = document.getElementById('article-content');
-      const startPos = textarea.selectionStart;
-      const endPos = textarea.selectionEnd;
-      const text = textarea.value;
-
-      let formattedText = '';
-      if (type === 'bold') {
-        formattedText = `**${text.substring(startPos, endPos) || 'teks-tebal'}**`;
-      } else if (type === 'list') {
-        formattedText = `\n1. ${text.substring(startPos, endPos) || 'Butir daftar pertama'}\n2. `;
-      } else if (type === 'br') {
-        formattedText = `\n\n`;
-      }
-
-      textarea.value = text.substring(0, startPos) + formattedText + text.substring(endPos);
-      textarea.focus();
-    }
-
-    // RICH TEXT PARSER
-    function renderRichText(rawText) {
-      if (!rawText) return '';
-      
-      let safeText = rawText
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
-
-      safeText = safeText.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-forest-700 dark:text-emerald-400">$1</strong>');
-
-      const lines = safeText.split('\n');
-      let resultHTML = '';
-      let isListActive = false;
-
-      lines.forEach(line => {
-        const trimmed = line.trim();
-        const listMatch = trimmed.match(/^(\d+)[.)]\s+(.*)$/);
-
-        if (listMatch) {
-          if (!isListActive) {
-            resultHTML += '<ol class="list-decimal pl-6 my-4 space-y-2.5 text-gray-700 dark:text-gray-200">';
-            isListActive = true;
-          }
-          resultHTML += `<li>${listMatch[2]}</li>`;
-        } else {
-          if (isListActive) {
-            resultHTML += '</ol>';
-            isListActive = false;
-          }
-          if (trimmed !== '') {
-            resultHTML += `<p class="mb-4.5 leading-relaxed text-justify">${trimmed}</p>`;
-          }
-        }
-      });
-
-      if (isListActive) {
-        resultHTML += '</ol>';
-      }
-
-      return resultHTML;
-    }
-
-    // GLOBAL DATABASE SYNCHRONIZER
-    async function syncData() {
-      let activeArticles = [...MOCK_ARTICLES];
-      let activeGallery = [...MOCK_GALLERY];
-
-      if (supabaseClient) {
-        try {
-          // Fetch Articles
-          const { data: dbArticles, error: artError } = await supabaseClient
-            .from('wanaaksara_articles')
-            .select('*')
-            .order('published_at', { ascending: false });
-
-          if (!artError && dbArticles) {
-            activeArticles = dbArticles;
-          }
-
-          // Fetch Gallery
-          const { data: dbGallery, error: galError } = await supabaseClient
-            .from('wanaaksara_gallery')
-            .select('*')
-            .order('created_at', { ascending: false });
-
-          if (!galError && dbGallery) {
-            activeGallery = dbGallery;
-          }
-        } catch (e) {
-          console.warn("Supabase connection offline. Using memory caching store.", e);
-        }
-      } else {
-        const localArt = localStorage.getItem('local_wanaaksara_articles');
-        const localGal = localStorage.getItem('local_wanaaksara_gallery');
-        if (localArt) activeArticles = JSON.parse(localArt);
-        if (localGal) activeGallery = JSON.parse(localGal);
-      }
-
-      appState.articles = activeArticles;
-      appState.gallery = activeGallery;
-
-      // Extract unique categories
-      const rawCategories = activeArticles.map(a => {
-        const base = a.category || 'Lingkungan';
-        // Clean prefixes if needed
-        return base.split('•')[0].trim();
-      });
-      appState.categories = ['Semua', ...new Set(rawCategories)];
-
-      // Populate Visual Views
-      renderSliderSection();
-      renderHomeArticlesSection(); // Gambar 4 Stack
-      renderCarouselArticlesSection(); // Gambar 5 Carousel
-      renderArticlesGridSection(); // Category filter listing
-      renderGallerySection();
-      renderAdminControls();
-      renderCategoryTags();
-    }
-
-    // RENDERS HOME BANNER SLIDER
-    function renderSliderSection() {
-      // (This slider is kept for premium interactive banner backgrounds if requested, logic runs smoothly on Beranda)
-    }
-
-    // RENDER: HOME LIST KUMPULAN ARTIKEL (GAMBAR 4 ROW STACK DESIGN)
-    function renderHomeArticlesSection() {
-      const container = document.getElementById('home-article-stack');
-      if (!container) return;
-
-      if (appState.articles.length === 0) {
-        container.innerHTML = `<p class="text-center text-gray-400">Belum ada artikel diterbitkan.</p>`;
-        return;
-      }
-
-      let stackHTML = '';
-      appState.articles.forEach(art => {
-        const dateObj = new Date(art.published_at);
-        const formattedDate = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  return (
+    <div className="flex h-screen bg-gray-50 font-sans">
+      <Sidebar user={user} activeTab={activeTab} setActiveTab={setActiveTab} onLogout={() => setUser(null)} />
+      <div className="flex-1 overflow-y-auto relative">
+        <Header user={user} />
         
-        stackHTML += `
-          <div class="flex flex-col md:flex-row gap-6 items-start group pb-6 border-b border-gray-100 dark:border-forest-600/20">
-            <!-- Left Thumbnail -->
-            <div onclick="openReader('${art.id}')" class="w-full md:w-[320px] aspect-[4/3] rounded-3xl overflow-hidden shadow-md flex-shrink-0 bg-gray-100 cursor-pointer">
-              <img src="${art.image_url || 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&q=80&w=1000'}" alt="${art.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-            </div>
-
-            <!-- Right Content Details -->
-            <div class="space-y-3 flex-grow">
-              <!-- Meta Label: e.g. "Artikel • #Sosial dan Ekonomi #Aktivisme" -->
-              <span class="block text-emerald-700 dark:text-emerald-400 text-xs font-extrabold uppercase tracking-wide">
-                ${art.category || 'Artikel • #Kehutanan'}
-              </span>
-
-              <!-- Title Link -->
-              <h3 onclick="openReader('${art.id}')" class="text-2xl font-bold font-serif text-gray-900 dark:text-white leading-snug group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors duration-300 cursor-pointer">
-                ${art.title}
-              </h3>
-
-              <!-- Excerpt -->
-              <p class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed line-clamp-2 font-medium">
-                ${art.content.replace(/\*\*/g, '').substring(0, 160)}...
-              </p>
-
-              <!-- Author / Date -->
-              <div class="text-xs text-gray-400 font-semibold space-y-0.5">
-                <span class="block text-gray-600 dark:text-gray-300">${art.author || 'Tim Redaksi Wanaaksara'}</span>
-                <span>${formattedDate}</span>
-              </div>
-            </div>
+        {isLoadingData && (
+          <div className="absolute top-0 left-0 w-full bg-green-500 text-white text-xs font-bold text-center py-1 flex items-center justify-center gap-2 z-50">
+            <Loader2 className="w-4 h-4 animate-spin"/> Sinkronisasi data dengan Spreadsheet...
           </div>
-        `;
-      });
+        )}
 
-      container.innerHTML = stackHTML;
+        <main className="p-6">
+          {activeTab === 'dashboard' && <Dashboard user={user} tasks={tasks} />}
+          {activeTab === 'kpi' && <KPIModule user={user} tasks={tasks} setTasks={setTasks} refreshData={() => fetchAllData(user)} />}
+          {activeTab === 'surat' && <SuratModule user={user} surat={surat} />}
+          {activeTab === 'dana' && <KeuanganModule user={user} dana={dana} />}
+          {activeTab === 'kalender' && <CalendarModule />}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+// --- LOGIN SCREEN ---
+function LoginScreen({ onLogin }) {
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  const handleGoogleLogin = async () => {
+    // Karena ini adalah preview environment tanpa Setup Client ID Google OAuth yang nyata,
+    // Kita memunculkan prompt untuk mensimulasikan pop-up "Pilih Akun Google" Anda.
+    const selectedEmail = window.prompt(
+      "SIMULASI GOOGLE LOGIN\n\nPilih/Masukkan email Google Anda untuk melanjutkan:", 
+      "email_anda@gmail.com"
+    );
+
+    if (selectedEmail && selectedEmail.trim() !== '') {
+      setIsLoggingIn(true);
+      await onLogin(selectedEmail.trim());
+      setIsLoggingIn(false);
     }
+  };
 
-    // RENDER: ARTIKEL CAROUSEL (GAMBAR 5 DESIGN)
-    function renderCarouselArticlesSection() {
-      const container = document.getElementById('carousel-articles-wrapper');
-      if (!container) return;
-
-      if (appState.articles.length === 0) {
-        container.innerHTML = `<p class="text-center text-gray-400 w-full py-8">Belum ada artikel.</p>`;
-        return;
-      }
-
-      let carouselHTML = '';
-      appState.articles.forEach(art => {
-        const dateObj = new Date(art.published_at);
-        const formattedDate = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  return (
+    <div className="flex h-screen w-full bg-gray-50">
+      {/* Left Panel - Branding */}
+      <div className="hidden md:flex w-1/2 bg-green-500 text-white flex-col justify-center p-12 relative overflow-hidden">
+        <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl opacity-50"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-lime-400 rounded-full mix-blend-multiply filter blur-3xl opacity-50"></div>
         
-        // Split tag to extract category first word
-        const cleanTag = (art.category || 'Artikel').split('•')[0].trim();
-
-        carouselHTML += `
-          <div class="w-[280px] sm:w-[320px] flex-shrink-0 bg-white dark:bg-forest-600 border border-white/40 dark:border-forest-500/10 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 group flex flex-col justify-between rounded-[24px]">
-            <!-- Top Card Thumbnail -->
-            <div onclick="openReader('${art.id}')" class="relative overflow-hidden aspect-[4/3] bg-gray-100 cursor-pointer">
-              <img src="${art.image_url || 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&q=80&w=1000'}" alt="${art.title}" class="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500">
-            </div>
-
-            <!-- Card Descriptions -->
-            <div class="p-5 flex-grow flex flex-col justify-between gap-4">
-              <div class="space-y-2">
-                <span class="text-emerald-700 dark:text-emerald-400 text-xs font-extrabold uppercase tracking-wide">
-                  ${cleanTag}
-                </span>
-                <h4 onclick="openReader('${art.id}')" class="font-bold font-serif text-lg text-gray-900 dark:text-white line-clamp-2 leading-snug cursor-pointer group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
-                  ${art.title}
-                </h4>
-                <p class="text-gray-500 dark:text-gray-300 text-xs leading-relaxed line-clamp-2 font-medium">
-                  ${art.content.replace(/\*\*/g, '').substring(0, 100)}...
-                </p>
-              </div>
-
-              <div class="text-[11px] text-gray-400 font-semibold border-t border-gray-100 dark:border-forest-500/20 pt-3">
-                <span class="block text-gray-600 dark:text-gray-300">${art.author || 'Tim Redaksi'}</span>
-                <span>${formattedDate}</span>
-              </div>
-            </div>
+        <div className="relative z-10 max-w-lg">
+          <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-8 shadow-xl">
+            <span className="text-4xl">🌍</span>
           </div>
-        `;
-      });
+          <h1 className="text-5xl font-bold mb-4 leading-tight">TRACTION REPORT SYSTEM</h1>
+          <h2 className="text-3xl font-semibold text-lime-200 mb-6">SOBAT BUMI BOGOR</h2>
+          <p className="text-green-100 text-lg leading-relaxed">
+            Sistem Penilaian Kinerja, Evaluasi, dan Rapor Terintegrasi untuk seluruh fungsionaris Sobat Bumi Bogor.
+          </p>
+        </div>
+      </div>
 
-      container.innerHTML = carouselHTML;
-    }
+      {/* Right Panel - Login Form */}
+      <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-8 bg-white shadow-[-20px_0_30px_-15px_rgba(0,0,0,0.1)] z-10 rounded-l-3xl">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-gray-800 mb-2">Login Fungsionaris</h2>
+            <p className="text-gray-500">Silakan masuk menggunakan akun Google Anda.</p>
+          </div>
 
-    // CAROUSEL NAV ACTIONS
-    function scrollCarouselLeft() {
-      const el = document.getElementById('carousel-articles-wrapper');
-      if (el) el.scrollLeft -= 340;
-    }
+          <div className="space-y-6">
+            <button 
+              onClick={handleGoogleLogin}
+              disabled={isLoggingIn}
+              className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 text-gray-700 px-4 py-3 rounded-xl hover:bg-gray-50 transition-all font-semibold shadow-sm disabled:opacity-70"
+            >
+              <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-6 h-6" />
+              {isLoggingIn ? (
+                <span className="flex items-center gap-2"><Loader2 className="w-5 h-5 animate-spin" /> Memeriksa Akun...</span>
+              ) : (
+                'Lanjutkan dengan Google'
+              )}
+            </button>
+          </div>
+          
+          <div className="mt-8 p-4 bg-green-50 text-green-800 rounded-xl text-sm border border-green-100">
+            <p className="font-bold mb-1 flex items-center gap-2"><Users className="w-4 h-4"/> Akses Terbatas</p>
+            <p>Hanya email yang telah didaftarkan oleh Admin ke dalam database sistem yang dapat mengakses portal ini.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-    // CAROUSEL NAV ACTIONS
-    function scrollCarouselRight() {
-      const el = document.getElementById('carousel-articles-wrapper');
-      if (el) el.scrollLeft += 340;
-    }
+// --- COMPONENTS ---
+function Sidebar({ user, activeTab, setActiveTab, onLogout }) {
+  const menu = [
+    { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { id: 'kpi', icon: Target, label: 'KPI & Tugas' },
+    { id: 'surat', icon: FileSignature, label: 'Pengajuan Surat' },
+    { id: 'dana', icon: DollarSign, label: 'Keuangan' },
+    { id: 'kalender', icon: CalendarIcon, label: 'Kalender' },
+  ];
 
-    // RENDER: DYNAMIC FILTER CATEGORY PILLS (Artikel Section)
-    function renderCategoryTags() {
-      const container = document.getElementById('category-tags-container');
-      if (!container) return;
-
-      let tagsHTML = '';
-      appState.categories.forEach(tag => {
-        const isActive = tag === appState.selectedCategory;
-        tagsHTML += `
-          <button onclick="selectCategoryFilter('${tag}')" class="px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 shadow-sm border ${
-            isActive 
-              ? 'bg-forest-500 text-white border-forest-500 scale-105 shadow-forest-500/10' 
-              : 'bg-white/95 dark:bg-forest-600/50 border-white/40 dark:border-forest-500/30 hover:bg-forest-50 dark:hover:bg-forest-700 text-gray-500 dark:text-gray-300'
-          }">
-            ${tag}
+  return (
+    <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
+      <div className="p-6 flex items-center gap-3 border-b border-gray-100">
+        <span className="text-3xl">🌍</span>
+        <div>
+          <h1 className="font-bold text-gray-800 leading-tight">Sobat Bumi</h1>
+          <p className="text-xs text-green-600 font-semibold">Traction System</p>
+        </div>
+      </div>
+      <div className="flex-1 py-6 px-4 space-y-2">
+        {menu.map(item => (
+          <button
+            key={item.id}
+            onClick={() => setActiveTab(item.id)}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+              activeTab === item.id 
+                ? 'bg-green-50 text-green-600 font-semibold shadow-sm' 
+                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+            }`}
+          >
+            <item.icon className={`w-5 h-5 ${activeTab === item.id ? 'text-green-500' : ''}`} />
+            {item.label}
           </button>
-        `;
-      });
-      container.innerHTML = tagsHTML;
-    }
+        ))}
+      </div>
+      <div className="p-4 border-t border-gray-100">
+        <button onClick={onLogout} className="w-full flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl transition-all font-medium">
+          <LogOut className="w-5 h-5" /> Logout
+        </button>
+      </div>
+    </div>
+  );
+}
 
-    function selectCategoryFilter(category) {
-      appState.selectedCategory = category;
-      renderCategoryTags();
-      renderArticlesGridSection();
-    }
+function Header({ user }) {
+  return (
+    <header className="bg-white px-8 py-4 border-b border-gray-200 flex justify-between items-center sticky top-0 z-20">
+      <h2 className="text-xl font-bold text-gray-800">Sistem Informasi</h2>
+      <div className="flex items-center gap-4">
+        <div className="text-right">
+          <p className="font-semibold text-gray-800">{user.name}</p>
+          <p className="text-xs text-green-600 font-medium bg-green-50 inline-block px-2 py-1 rounded-full">{user.posisi} ({user.role})</p>
+        </div>
+        <div className="w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-md uppercase">
+          {user.name.charAt(0)}
+        </div>
+      </div>
+    </header>
+  );
+}
 
-    // RENDER: EXTENDED FILTERED LISTING FOR DISCOVERY
-    function renderArticlesGridSection() {
-      const container = document.getElementById('articles-grid-container');
-      if (!container) return;
+// --- MODULES ---
 
-      const searchVal = document.getElementById('article-search') ? document.getElementById('article-search').value.toLowerCase() : "";
-
-      let filtered = [...appState.articles];
-      
-      if (appState.selectedCategory !== 'Semua') {
-        filtered = filtered.filter(a => (a.category || 'Lingkungan').includes(appState.selectedCategory));
-      }
-
-      if (searchVal) {
-        filtered = filtered.filter(a => 
-          a.title.toLowerCase().includes(searchVal) || 
-          (a.category || '').toLowerCase().includes(searchVal)
-        );
-      }
-
-      if (filtered.length === 0) {
-        container.innerHTML = `
-          <div class="col-span-full py-12 text-center text-gray-400 bg-white/95 dark:bg-forest-600/90 rounded-3xl border border-white/20 p-8">
-            <i data-lucide="book-open" class="w-12 h-12 mx-auto text-gray-300 mb-3 animate-pulse"></i>
-            <h3 class="font-bold text-lg">Tidak Menemukan Tulisan</h3>
-            <p class="text-sm">Tidak ada artikel yang cocok dengan pencarian Anda.</p>
+function Dashboard({ user, tasks }) {
+  const isMaster = user.role === 'Master' || user.role === 'Admin';
+  
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-green-100 text-green-600 rounded-xl flex items-center justify-center"><Target className="w-6 h-6"/></div>
+            <div>
+              <p className="text-sm text-gray-500 font-medium">Pencapaian KPI</p>
+              <h3 className="text-2xl font-bold text-gray-800">85%</h3>
+            </div>
           </div>
-        `;
-        lucide.createIcons();
-        return;
+          <div className="mt-4 bg-gray-100 rounded-full h-2 w-full overflow-hidden">
+            <div className="bg-green-500 h-2 w-[85%] rounded-full"></div>
+          </div>
+        </div>
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center"><CheckCircle className="w-6 h-6"/></div>
+            <div>
+              <p className="text-sm text-gray-500 font-medium">Tugas Selesai</p>
+              <h3 className="text-2xl font-bold text-gray-800">{tasks.filter(t => t.status === 'Completed').length} / {tasks.length || 0}</h3>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center"><Users className="w-6 h-6"/></div>
+            <div>
+              <p className="text-sm text-gray-500 font-medium">Kehadiran Rata-rata</p>
+              <h3 className="text-2xl font-bold text-gray-800">-</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+          <h3 className="text-lg font-bold text-gray-800 mb-4">Agenda Terdekat (Contoh)</h3>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-500 italic">Data diambil dari modul kalender...</p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+          <h3 className="text-lg font-bold text-gray-800 mb-4">{isMaster ? 'Status Tugas Divisi' : 'Tugas Saya'}</h3>
+          <div className="space-y-3">
+            {tasks.length === 0 ? (
+              <p className="text-sm text-gray-500 italic">Belum ada tugas.</p>
+            ) : tasks.slice(0,3).map(task => (
+              <div key={task.id} className="flex items-center justify-between p-4 border border-gray-100 rounded-xl">
+                <div>
+                  <h4 className="font-semibold text-gray-800">{task.title}</h4>
+                  <p className="text-xs text-gray-500 mt-1">Deadline: {task.deadline}</p>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                  task.status === 'Pending' ? 'bg-orange-100 text-orange-700' :
+                  task.status === 'In Progress' ? 'bg-blue-100 text-blue-700' :
+                  'bg-green-100 text-green-700'
+                }`}>
+                  {task.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function KPIModule({ user, tasks, setTasks, refreshData }) {
+  const [subTab, setSubTab] = useState('tugas');
+  
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="flex border-b border-gray-200">
+        <button 
+          onClick={() => setSubTab('tugas')}
+          className={`px-6 py-4 font-semibold text-sm transition-all ${subTab === 'tugas' ? 'text-green-600 border-b-2 border-green-500 bg-green-50/50' : 'text-gray-500 hover:bg-gray-50'}`}
+        >
+          Task Management (Tugas)
+        </button>
+        <button 
+          onClick={() => setSubTab('kehadiran')}
+          className={`px-6 py-4 font-semibold text-sm transition-all ${subTab === 'kehadiran' ? 'text-green-600 border-b-2 border-green-500 bg-green-50/50' : 'text-gray-500 hover:bg-gray-50'}`}
+        >
+          Kehadiran & Check-in
+        </button>
+      </div>
+      
+      <div className="p-6">
+        {subTab === 'tugas' && <TasksTab user={user} tasks={tasks} refreshData={refreshData} />}
+        {subTab === 'kehadiran' && <AttendanceTab user={user} />}
+      </div>
+    </div>
+  );
+}
+
+function AttendanceTab({ user }) {
+  const isMaster = user.role === 'Master' || user.role === 'Admin';
+  
+  return (
+    <div className="space-y-6">
+      <div className="p-4 bg-yellow-50 text-yellow-800 rounded-xl text-sm font-medium border border-yellow-200">
+        Modul Absensi sedang dikembangkan. Backend telah siap, namun integrasi upload foto (Base64) ke Drive sedang dipersiapkan.
+      </div>
+    </div>
+  );
+}
+
+function TasksTab({ user, tasks, refreshData }) {
+  const isAssigner = user.role === 'Master' || user.role === 'Admin';
+  const [isUpdating, setIsUpdating] = useState(false);
+  
+  // Real API Update Status
+  const updateStatus = async (taskId, newStatus) => {
+    setIsUpdating(true);
+    try {
+      const response = await fetch(`${API_URL}?action=updateTaskStatus&taskId=${taskId}&status=${newStatus}`);
+      const data = await response.json();
+      if(data.status === 'success') {
+        refreshData(); // Panggil ulang data dari API setelah update sukses
+      } else {
+        alert('Gagal update tugas');
       }
+    } catch (error) {
+      alert('Error saat mengupdate tugas');
+    }
+    setIsUpdating(false);
+  };
 
-      let gridHTML = '';
-      filtered.forEach(art => {
-        const dateObj = new Date(art.published_at);
-        const formattedDate = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  return (
+    <div className="space-y-6">
+      {isAssigner && (
+        <div className="bg-green-50 p-6 rounded-xl border border-green-200">
+          <h3 className="font-bold text-green-800 mb-4">Beri Tugas Baru (Integrasi API Menyusul)</h3>
+          <p className="text-sm text-green-700">Saat ini tugas ditambahkan manual via Spreadsheet "Tugas". Fitur push dari sini akan segera terhubung.</p>
+        </div>
+      )}
 
-        gridHTML += `
-          <article class="bg-white dark:bg-forest-600 rounded-[32px] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-white/40 dark:border-forest-500/10 flex flex-col justify-between group h-full hover:-translate-y-1">
-            <div class="relative overflow-hidden aspect-video bg-gray-100 cursor-pointer" onclick="openReader('${art.id}')">
-              <img src="${art.image_url || 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&q=80&w=1000'}" alt="${art.title}" class="w-full h-full object-cover">
-              <span class="absolute top-4 left-4 px-3.5 py-1.5 bg-white/95 dark:bg-forest-700/95 text-forest-700 dark:text-green-300 text-[10px] font-bold rounded-xl uppercase shadow-sm">
-                ${(art.category || 'Artikel').split('•')[0].trim()}
+      <h3 className="font-bold text-gray-800 text-lg flex items-center gap-2">
+        Daftar Tugas Database {isUpdating && <Loader2 className="w-4 h-4 animate-spin text-green-500"/>}
+      </h3>
+      
+      <div className="space-y-4">
+        {tasks.length === 0 ? <p className="text-sm text-gray-500">Tidak ada tugas ditemukan dari Spreadsheet.</p> : null}
+        
+        {tasks.map(task => (
+          <div key={task.id} className="border border-gray-200 rounded-xl p-5 hover:shadow-md transition-all bg-white">
+            <div className="flex justify-between items-start mb-2">
+              <div>
+                <h4 className="font-bold text-lg text-gray-800">{task.title}</h4>
+                <p className="text-sm text-gray-500">Dari: {task.assigner} | Untuk: {task.assignee}</p>
+              </div>
+              <span className={`px-4 py-1.5 rounded-full text-xs font-bold border ${
+                task.status === 'Pending' ? 'bg-orange-50 text-orange-600 border-orange-200' :
+                task.status === 'In Progress' ? 'bg-blue-50 text-blue-600 border-blue-200' :
+                task.status === 'Under Review' ? 'bg-purple-50 text-purple-600 border-purple-200' :
+                'bg-green-50 text-green-600 border-green-200'
+              }`}>
+                {task.status}
               </span>
             </div>
+            <p className="text-gray-600 text-sm my-3 bg-gray-50 p-3 rounded-lg border border-gray-100">{task.desc}</p>
             
-            <div class="p-6 flex-grow flex flex-col justify-between gap-4">
-              <div class="space-y-2">
-                <h4 class="font-bold font-serif text-lg line-clamp-2 text-gray-900 dark:text-white leading-snug cursor-pointer group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors" onclick="openReader('${art.id}')">
-                  ${art.title}
-                </h4>
-                <p class="text-gray-600 dark:text-gray-300 text-xs leading-relaxed line-clamp-2 font-medium">
-                  ${art.content.replace(/\*\*/g, '').substring(0, 100)}...
-                </p>
+            <div className="flex justify-between items-center mt-4 border-t border-gray-100 pt-4">
+              <span className="text-sm font-semibold text-red-500 flex items-center gap-1">
+                <Clock className="w-4 h-4"/> Deadline: {task.deadline}
+              </span>
+              
+              <div className="flex gap-2">
+                {/* User Actions */}
+                {user.email === task.assignee && task.status === 'Pending' && (
+                  <button disabled={isUpdating} onClick={() => updateStatus(task.id, 'In Progress')} className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-600 shadow-sm disabled:opacity-50">
+                    Accept Task
+                  </button>
+                )}
+                {user.email === task.assignee && task.status === 'In Progress' && (
+                  <button disabled={isUpdating} onClick={() => updateStatus(task.id, 'Under Review')} className="bg-purple-500 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-purple-600 shadow-sm disabled:opacity-50">
+                    Submit (Lapor)
+                  </button>
+                )}
+                
+                {/* Admin Actions */}
+                {user.email === task.assigner && task.status === 'Under Review' && (
+                  <div className="flex gap-2 items-center">
+                    <button disabled={isUpdating} onClick={() => updateStatus(task.id, 'Revision')} className="bg-red-100 text-red-700 px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-200">
+                      Revisi
+                    </button>
+                    <button disabled={isUpdating} onClick={() => updateStatus(task.id, 'Completed')} className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-600 shadow-sm flex items-center gap-1">
+                      <Check className="w-4 h-4"/> Nilai Selesai
+                    </button>
+                  </div>
+                )}
               </div>
-
-              <div class="text-[11px] text-gray-400 font-semibold border-t border-gray-100 dark:border-forest-500/20 pt-3">
-                <span class="block text-gray-600 dark:text-gray-300">${art.author || 'Tim Redaksi'}</span>
-                <span>${formattedDate}</span>
-              </div>
-            </div>
-          </article>
-        `;
-      });
-
-      container.innerHTML = gridHTML;
-    }
-
-    function filterArticles() {
-      renderArticlesGridSection();
-    }
-
-    // RENDER: GALLERY
-    function renderGallerySection() {
-      const container = document.getElementById('gallery-container');
-
-      if (appState.gallery.length === 0) {
-        container.innerHTML = `
-          <div class="col-span-full py-12 text-center text-gray-400">
-            <i data-lucide="camera" class="w-12 h-12 mx-auto text-gray-300 mb-3 animate-pulse"></i>
-            <p class="text-sm">Belum ada foto kegiatan lapangan.</p>
-          </div>
-        `;
-        lucide.createIcons();
-        return;
-      }
-
-      let galleryHTML = '';
-      appState.gallery.forEach(img => {
-        galleryHTML += `
-          <div onclick="openGalleryLightbox('${img.image_url}', \`${img.caption || ''}\`)" class="relative overflow-hidden rounded-2xl aspect-square bg-gray-100 cursor-pointer shadow-sm hover:shadow-2xl transition-all duration-300 group hover:-translate-y-1 border border-white/20">
-            <img src="${img.image_url}" alt="Galeri" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-              <p class="text-xs text-white font-medium line-clamp-2 leading-relaxed">${img.caption || 'Foto Aksi Wanaaksara'}</p>
             </div>
           </div>
-        `;
-      });
+        ))}
+      </div>
+    </div>
+  );
+}
 
-      container.innerHTML = galleryHTML;
-      lucide.createIcons();
-    }
+function SuratModule({ user, surat }) {
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold text-gray-800">Sistem Pengajuan Surat</h2>
+        <button className="bg-green-500 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 hover:bg-green-600 shadow-sm">
+          <Plus className="w-5 h-5"/> Buat Pengajuan
+        </button>
+      </div>
 
-    // RENDER: ADMIN CONTROL TABLES
-    function renderAdminControls() {
-      const artListContainer = document.getElementById('admin-articles-list');
-      const galListContainer = document.getElementById('admin-gallery-list');
+      <div className="overflow-x-auto">
+        {surat.length === 0 ? (
+          <p className="text-sm text-gray-500 text-center py-6">Belum ada data surat di Spreadsheet.</p>
+        ) : (
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-gray-50 text-gray-600 text-sm border-b border-gray-200">
+                <th className="p-4 font-semibold">Tgl Pengajuan</th>
+                <th className="p-4 font-semibold">Pemohon</th>
+                <th className="p-4 font-semibold">Jenis & Perihal</th>
+                <th className="p-4 font-semibold">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {surat.map(s => (
+                <tr key={s.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <td className="p-4 text-sm text-gray-700">{s.timestamp}</td>
+                  <td className="p-4 text-sm font-medium text-gray-800">{s.pemohon}</td>
+                  <td className="p-4 text-sm text-gray-600">
+                    <span className="font-bold text-gray-800">{s.jenis}</span><br/>{s.perihal}
+                  </td>
+                  <td className="p-4">
+                    <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold">{s.status}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+}
 
-      if (appState.articles.length === 0) {
-        artListContainer.innerHTML = '<p class="text-xs text-gray-400 text-center py-4 font-semibold">Belum ada artikel.</p>';
-      } else {
-        let listHTML = '';
-        appState.articles.forEach(art => {
-          listHTML += `
-            <div class="flex items-center justify-between p-3.5 bg-gray-50/50 dark:bg-forest-700/50 rounded-2xl border border-gray-100 dark:border-forest-500/50 gap-4 text-xs transition-all hover:bg-gray-100 dark:hover:bg-forest-700">
-              <div class="truncate flex-grow">
-                <span class="font-bold block truncate text-gray-800 dark:text-gray-200">${art.title}</span>
-                <span class="text-gray-400 font-semibold text-[10px] uppercase">${art.category || 'Tanpa Kategori'}</span>
-              </div>
-              <div class="flex items-center gap-1.5 flex-shrink-0">
-                <button onclick="editArticle('${art.id}')" class="p-2 rounded-xl bg-forest-500/10 hover:bg-forest-500 text-forest-500 hover:text-white transition-all active:scale-90">
-                  <i data-lucide="edit-3" class="w-4 h-4"></i>
-                </button>
-                <button onclick="deleteArticle('${art.id}')" class="p-2 rounded-xl bg-red-500/10 hover:bg-red-50 text-red-500 hover:text-white transition-all active:scale-90">
-                  <i data-lucide="trash-2" class="w-4 h-4"></i>
-                </button>
+function KeuanganModule({ user, dana }) {
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+       <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold text-gray-800">Pengajuan Pencairan & Reimbursement</h2>
+        <button className="bg-green-500 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 hover:bg-green-600 shadow-sm">
+          <DollarSign className="w-5 h-5"/> Ajukan Dana
+        </button>
+      </div>
+
+      <div className="space-y-4">
+        {dana.length === 0 ? (
+          <p className="text-sm text-gray-500 text-center py-6">Belum ada pengajuan keuangan di Spreadsheet.</p>
+        ) : (
+          dana.map(d => (
+            <div key={d.id} className="border border-gray-200 rounded-xl p-5 hover:shadow-md transition-all bg-white relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 h-full bg-green-500"></div>
+              <div className="flex justify-between items-start">
+                <div>
+                  <h4 className="font-bold text-lg text-gray-800">{d.divisi}</h4>
+                  <p className="text-sm text-gray-500 mt-1">Deadline Pencairan: {d.deadline}</p>
+                </div>
+                <div className="text-right">
+                  <h3 className="font-bold text-xl text-green-600">Rp {d.nominal}</h3>
+                  <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold inline-block mt-2">{d.status}</span>
+                </div>
               </div>
             </div>
-          `;
-        });
-        artListContainer.innerHTML = listHTML;
-      }
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
 
-      if (appState.gallery.length === 0) {
-        galListContainer.innerHTML = '<p class="text-xs text-gray-400 text-center col-span-3 py-4 font-semibold">Kosong.</p>';
-      } else {
-        let listHTML = '';
-        appState.gallery.forEach(img => {
-          listHTML += `
-            <div class="relative overflow-hidden aspect-square bg-gray-100 rounded-xl group border border-gray-100 dark:border-forest-500/50 shadow-sm">
-              <img src="${img.image_url}" alt="" class="w-full h-full object-cover">
-              <div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <button onclick="deleteGallery('${img.id}')" class="p-2 rounded-xl bg-red-600 text-white hover:bg-red-700 shadow transition-all active:scale-90">
-                  <i data-lucide="trash" class="w-4 h-4"></i>
-                </button>
-              </div>
-            </div>
-          `;
-        });
-        galListContainer.innerHTML = listHTML;
-      }
-
-      lucide.createIcons();
-    }
-
-    // ACTIONS: TRANSITION TO DETAILED FULL SCREEN PAGE (NO POP-UP)
-    function openReader(articleId) {
-      const art = appState.articles.find(a => a.id === articleId);
-      if (!art) return;
-
-      // Keep track of parent navigation page to go back smoothly
-      appState.previousPage = appState.currentPage;
-
-      const dateObj = new Date(art.published_at);
-      const formattedDate = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-      const formattedTime = dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
-
-      // Load parameters directly into the full-screen section view DOM
-      document.getElementById('view-article-image').src = art.image_url || 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&q=80&w=1000';
-      document.getElementById('view-article-title').innerText = art.title;
-      document.getElementById('view-article-category').innerText = (art.category || 'Artikel').split('•')[0].trim();
-      document.getElementById('view-article-meta').innerHTML = `
-        <span class="flex items-center gap-1.5"><i data-lucide="calendar" class="w-4 h-4 text-emerald-600"></i> Terbit: ${formattedDate}</span>
-        <span class="flex items-center gap-1.5"><i data-lucide="clock" class="w-4 h-4 text-emerald-600"></i> Pukul ${formattedTime}</span>
-        <span class="flex items-center gap-1.5"><i data-lucide="user" class="w-4 h-4 text-emerald-600"></i> Ditulis oleh: ${art.author || 'Tim Redaksi Wanaaksara'}</span>
-      `;
-      document.getElementById('view-article-content').innerHTML = renderRichText(art.content);
-
-      // Programmatically navigate to subpage without cluttering the sliding indicator
-      hideActivePageSection();
-      
-      appState.currentPage = 'article-view';
-      const targetPage = document.getElementById('page-article-view');
-      if (targetPage) {
-        targetPage.classList.remove('hidden');
-        targetPage.classList.add('fade-enter');
-        setTimeout(() => {
-          targetPage.classList.add('fade-enter-active');
-        }, 30);
-      }
-
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      lucide.createIcons();
-    }
-
-    function hideActivePageSection() {
-      const activeSection = document.querySelector('.page-section:not(.hidden)');
-      if (activeSection) {
-        activeSection.classList.add('hidden');
-      }
-    }
-
-    // ACTIONS: DYNAMIC BACK NAVIGATION
-    function goBackFromArticle() {
-      const previous = appState.previousPage || 'home';
-      navigateTo(previous);
-    }
-
-    function closeGalleryLightbox() {
-      const modal = document.getElementById('gallery-modal');
-      const img = document.getElementById('gallery-lightbox-img');
-      img.classList.add('scale-95');
-      setTimeout(() => {
-        modal.classList.add('hidden');
-      }, 200);
-    }
-
-    // CRUD: ARTIKEL (SAVE / INSERT / EDIT)
-    async function saveArticle() {
-      const editId = document.getElementById('edit-article-id').value;
-      const title = document.getElementById('article-title').value.trim();
-      const category = document.getElementById('article-category').value.trim();
-      const content = document.getElementById('article-content').value.trim();
-      const dateVal = document.getElementById('article-date').value;
-      const timeVal = document.getElementById('article-time').value;
-      const imageUrl = document.getElementById('article-image-url').value.trim();
-      const isFeatured = document.getElementById('article-featured').checked;
-
-      if (!title || !content || !dateVal || !timeVal) {
-        showToast("Mohon lengkapi judul, konten, tanggal, dan waktu publikasi!");
-        return;
-      }
-
-      const publishedAt = `${dateVal}T${timeVal}:00`;
-
-      const articlePayload = {
-        title,
-        category: category || 'Artikel • #Umum',
-        content,
-        image_url: imageUrl || 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&q=80&w=1000',
-        published_at: publishedAt,
-        is_featured: isFeatured,
-        author: 'Redaksi Wanaaksara'
-      };
-
-      if (supabaseClient) {
-        try {
-          if (editId) {
-            const { error } = await supabaseClient
-              .from('wanaaksara_articles')
-              .update(articlePayload)
-              .eq('id', editId);
-
-            if (error) throw error;
-            showToast("Artikel berhasil diperbarui secara Online!");
-          } else {
-            const { error } = await supabaseClient
-              .from('wanaaksara_articles')
-              .insert([articlePayload]);
-
-            if (error) throw error;
-            showToast("Artikel baru berhasil terbit di seluruh Device!");
-          }
-        } catch (e) {
-          showToast("Koneksi bermasalah. Menyimpan ke Local storage.");
-          console.error(e);
-          saveArticleLocally(editId, articlePayload);
-        }
-      } else {
-        saveArticleLocally(editId, articlePayload);
-      }
-
-      resetArticleForm();
-      await syncData();
-    }
-
-    function saveArticleLocally(editId, payload) {
-      let articles = [...MOCK_ARTICLES];
-      const saved = localStorage.getItem('local_wanaaksara_articles');
-      if (saved) articles = JSON.parse(saved);
-
-      if (editId) {
-        articles = articles.map(art => art.id === editId ? { ...art, ...payload } : art);
-        showToast("Update offline berhasil disimpan!");
-      } else {
-        payload.id = 'local-' + Date.now();
-        articles.unshift(payload);
-        showToast("Artikel offline baru diterbitkan!");
-      }
-
-      localStorage.setItem('local_wanaaksara_articles', JSON.stringify(articles));
-    }
-
-    function editArticle(id) {
-      const art = appState.articles.find(a => a.id === id);
-      if (!art) return;
-
-      document.getElementById('form-title').innerText = "Edit Artikel";
-      document.getElementById('edit-article-id').value = art.id;
-      document.getElementById('article-title').value = art.title;
-      document.getElementById('article-category').value = art.category || '';
-      document.getElementById('article-content').value = art.content;
-      document.getElementById('article-image-url').value = art.image_url || '';
-      document.getElementById('article-featured').checked = art.is_featured || false;
-
-      if (art.published_at) {
-        const parts = art.published_at.split('T');
-        document.getElementById('article-date').value = parts[0];
-        if (parts[1]) {
-          document.getElementById('article-time').value = parts[1].substring(0, 5);
-        }
-      }
-
-      document.getElementById('cancel-edit-btn').classList.remove('hidden');
-      window.scrollTo({ top: document.getElementById('page-admin-dashboard').offsetTop, behavior: 'smooth' });
-    }
-
-    function resetArticleForm() {
-      document.getElementById('form-title').innerText = "Tulis / Edit Artikel Baru";
-      document.getElementById('edit-article-id').value = "";
-      document.getElementById('article-title').value = "";
-      document.getElementById('article-category').value = "";
-      document.getElementById('article-content').value = "";
-      document.getElementById('article-image-file').value = "";
-      document.getElementById('article-image-url').value = "";
-      document.getElementById('article-featured').checked = false;
-      document.getElementById('cancel-edit-btn').classList.add('hidden');
-      setupFormDefaults();
-    }
-
-    async function deleteArticle(id) {
-      if (!confirm("Apakah Anda yakin ingin menghapus artikel ini?")) return;
-
-      if (supabaseClient) {
-        try {
-          const { error } = await supabaseClient
-            .from('wanaaksara_articles')
-            .delete()
-            .eq('id', id);
-
-          if (error) throw error;
-          showToast("Artikel berhasil dihapus dari Database!");
-        } catch (e) {
-          deleteArticleLocally(id);
-        }
-      } else {
-        deleteArticleLocally(id);
-      }
-
-      await syncData();
-    }
-
-    function deleteArticleLocally(id) {
-      let articles = [];
-      const saved = localStorage.getItem('local_wanaaksara_articles');
-      if (saved) articles = JSON.parse(saved);
-      else articles = [...MOCK_ARTICLES];
-
-      articles = articles.filter(art => art.id !== id);
-      localStorage.setItem('local_wanaaksara_articles', JSON.stringify(articles));
-      showToast("Artikel berhasil dihapus!");
-    }
-
-    // CRUD: GALERI (SAVE / DELETE)
-    async function saveGallery() {
-      const imageUrl = document.getElementById('gallery-image-url').value.trim();
-      const caption = document.getElementById('gallery-caption').value.trim();
-
-      if (!imageUrl) {
-        showToast("Mohon pilih file foto atau isi URL gambar terlebih dahulu!");
-        return;
-      }
-
-      const payload = {
-        image_url: imageUrl,
-        caption: caption || 'Kegiatan Lingkungan Wanaaksara'
-      };
-
-      if (supabaseClient) {
-        try {
-          const { error } = await supabaseClient
-            .from('wanaaksara_gallery')
-            .insert([payload]);
-
-          if (error) throw error;
-          showToast("Foto berhasil diunggah ke Galeri Global!");
-        } catch (e) {
-          saveGalleryLocally(payload);
-        }
-      } else {
-        saveGalleryLocally(payload);
-      }
-
-      document.getElementById('gallery-image-file').value = "";
-      document.getElementById('gallery-image-url').value = "";
-      document.getElementById('gallery-caption').value = "";
-      await syncData();
-    }
-
-    function saveGalleryLocally(payload) {
-      let gallery = [...MOCK_GALLERY];
-      const saved = localStorage.getItem('local_wanaaksara_gallery');
-      if (saved) gallery = JSON.parse(saved);
-
-      payload.id = 'g-local-' + Date.now();
-      gallery.unshift(payload);
-      localStorage.setItem('local_wanaaksara_gallery', JSON.stringify(gallery));
-      showToast("Foto berhasil diunggah ke memori lokal!");
-    }
-
-    async function deleteGallery(id) {
-      if (!confirm("Hapus foto dari galeri?")) return;
-
-      if (supabaseClient) {
-        try {
-          const { error } = await supabaseClient
-            .from('wanaaksara_gallery')
-            .delete()
-            .eq('id', id);
-
-          if (error) throw error;
-          showToast("Foto berhasil dihapus dari Database!");
-        } catch (e) {
-          deleteGalleryLocally(id);
-        }
-      } else {
-        deleteGalleryLocally(id);
-      }
-
-      await syncData();
-    }
-
-    function deleteGalleryLocally(id) {
-      let gallery = [];
-      const saved = localStorage.getItem('local_wanaaksara_gallery');
-      if (saved) gallery = JSON.parse(saved);
-      else gallery = [...MOCK_GALLERY];
-
-      gallery = gallery.filter(g => g.id !== id);
-      localStorage.setItem('local_wanaaksara_gallery', JSON.stringify(gallery));
-      showToast("Foto terhapus!");
-    }
-
-    // SLIDER AUTOPLAY DUMMY CONTROLS (Safety validation)
-    function startSliderAutoPlay() {}
-    function pauseSlider() {}
-    function resumeSlider() {}
-  </script>
-</body>
-</html>
+function CalendarModule() {
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+        <CalendarIcon className="w-6 h-6 text-green-500"/> Kalender Organisasi
+      </h2>
+      <p className="mb-4 text-sm text-gray-600">Modul Kalender API sedang dihubungkan dengan Google Calendar & Database.</p>
+    </div>
+  );
+}
