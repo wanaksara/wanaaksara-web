@@ -1742,7 +1742,7 @@
                     <select id="eval-status" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-primary-500">
                         <option value="Under Review" ${task.status==='Under Review'?'selected':''}>Under Review (Tahan)</option>
                         <option value="Revisi" ${task.status==='Revisi'?'selected':''}>Perlu Revisi</option>
-                        <option value="Completed" ${task.status==='Completed'?'selected':''}>Completed (Selesai & Nilai Masuk KPI)</option>
+                        <option value="Completed" ${task.status==='Completed'?'selected':''}>Completed (Selesai)</option>
                     </select>
                     <div class="space-y-2">
                         <button class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-sm font-bold transition shadow-md" id="btn-action-task" onclick="submitAdminEval('${task.id}')">Simpan Evaluasi</button>
