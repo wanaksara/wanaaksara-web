@@ -726,17 +726,9 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-1.5">Pilih Divisi <span class="text-red-500">*</span></label>
+                        <!-- Dropdown divisi telah diubah menjadi dinamis untuk sinkronisasi otomatis dengan database -->
                         <select id="task-divisi" required class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all" onchange="populateTaskAnggota(this.value)">
                             <option value="">Pilih Divisi</option>
-                            <option value="Coordinator">Coordinator</option>
-                            <option value="Project Officer">Project Officer</option>
-                            <option value="Sekretaris">Sekretaris</option>
-                            <option value="Bendahara">Bendahara</option>
-                            <option value="Research and Development">Research and Development</option>
-                            <option value="Finance and Busines Development">Finance and Busines Development</option>
-                            <option value="Comunity Development">Comunity Development</option>
-                            <option value="Publication Documentation and Design">Publication Documentation and Design</option>
-                            <option value="Public Relations">Public Relations</option>
                         </select>
                     </div>
                     <div>
@@ -1299,6 +1291,8 @@
             await loadDana();
             await loadAgenda();
             
+            renderTaskDivisiDropdown();
+            
             if(AppState.currentView === 'dashboard') {
                 initChart();
                 renderTabelPerforma();
@@ -1572,8 +1566,54 @@
             }
         }
 
+        function renderTaskDivisiDropdown() {
+            const selectDivisi = document.getElementById('task-divisi');
+            if (!selectDivisi) return;
+
+            // List divisi default sebagai cadangan
+            const defaultDivisions = [
+                "Coordinator",
+                "Project Officer",
+                "Sekretaris",
+                "Bendahara",
+                "Research and Development",
+                "Finance and Busines Development",
+                "Comunity Development",
+                "Publication Documentation and Design",
+                "Public Relations"
+            ];
+
+            // Dapatkan seluruh divisi unik yang saat ini terdaftar di database supabase
+            const dbDivisions = AppState.usersList
+                .map(u => u.divisi)
+                .filter(d => d && d.trim() !== "");
+
+            // Gabungkan list default & database, kemudian bersihkan duplikasi (case-insensitive)
+            const uniqueDivMap = new Map();
+            [...defaultDivisions, ...dbDivisions].forEach(div => {
+                const cleanName = div.trim();
+                uniqueDivMap.set(cleanName.toLowerCase(), cleanName);
+            });
+
+            const finalDivisions = Array.from(uniqueDivMap.values()).sort();
+
+            // Render opsi baru ke HTML select element
+            const savedSelectedVal = selectDivisi.value;
+            selectDivisi.innerHTML = '<option value="">Pilih Divisi</option>';
+            finalDivisions.forEach(div => {
+                selectDivisi.innerHTML += `<option value="${div}">${div}</option>`;
+            });
+
+            // Kembalikan seleksi jika divisi tersebut masih ada
+            if (savedSelectedVal && finalDivisions.includes(savedSelectedVal)) {
+                selectDivisi.value = savedSelectedVal;
+            }
+        }
+
         function populateTaskAnggota(divisi) {
             const select = document.getElementById('task-anggota');
+            if (!select) return;
+            
             select.innerHTML = '<option value="">Memuat Anggota Divisi...</option>';
             if(!divisi) {
                 select.innerHTML = '<option value="">Pilih Divisi Terlebih Dahulu...</option>';
@@ -1581,10 +1621,14 @@
             }
             
             const queryDivisi = divisi.trim().toLowerCase();
+            
+            // Filter anggota BEM yang memiliki divisi sama persis dari database
             const members = AppState.usersList.filter(u => {
                 if(!u.divisi) return false;
                 const d = u.divisi.trim().toLowerCase();
-                return d === queryDivisi || (queryDivisi.includes("publication") && d.includes("publication")) || (queryDivisi.includes("design") && d.includes("design"));
+                return d === queryDivisi || 
+                       (queryDivisi.includes("publication") && d.includes("publication")) || 
+                       (queryDivisi.includes("design") && d.includes("design"));
             });
             
             select.innerHTML = '<option value="Semua">Semua Anggota Divisi (Umum)</option>';
