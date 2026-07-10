@@ -71,7 +71,6 @@
 
     <div id="toast-container"></div>
 
-    <!-- -->
     <!-- LOGIN SCREEN -->
     <div id="login-view" class="h-screen w-full flex bg-white z-[100] absolute top-0 left-0 overflow-hidden">
         <!-- Bagian Kiri (Branding - Logo BEM Sobat Bumi) -->
@@ -129,7 +128,6 @@
         </div>
     </div>
 
-    <!-- -->
     <!-- MAIN APP SHELL -->
     <div id="app-shell" class="hidden flex h-screen w-full overflow-hidden bg-[#e0f2fe] relative">
         
@@ -206,7 +204,6 @@
                 </div>
             </header>
 
-            <!-- -->
             <main class="flex-1 overflow-x-hidden overflow-y-auto bg-transparent p-4 md:p-6 pb-28 md:pb-6 relative z-10 w-full">
                 
                 <!-- 1. DASHBOARD -->
@@ -311,7 +308,6 @@
                     </div>
                 </div>
 
-                <!-- -->
                 <!-- 2. KEHADIRAN -->
                 <div id="kehadiran-view" class="view-section">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -365,7 +361,6 @@
                     </div>
                 </div>
 
-                <!-- -->
                 <!-- 3. TASK MANAGEMENT -->
                 <div id="task-view" class="view-section">
                     <div class="flex justify-between items-center mb-6">
@@ -383,7 +378,6 @@
                     </div>
                 </div>
 
-                <!-- -->
                 <!-- 4. PENGAJUAN SURAT -->
                 <div id="surat-view" class="view-section">
                     <div class="glass-card p-6 mb-6">
@@ -402,7 +396,7 @@
                             <input id="surat-perihal" type="text" required class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm" placeholder="Contoh: Undangan Narasumber"></div>
                             <div class="md:col-span-2"><label class="block text-xs font-semibold text-gray-700 mb-1">Draft / Keterangan Isi</label>
                             <textarea id="surat-draft" rows="3" required class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm" placeholder="Tuliskan poin-poin yang harus ada di surat..."></textarea></div>
-                            <div class="md:col-span-2 flex justify-end"><button type="submit" id="btn-submit-surat" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2 shadow-md">Ajukan Surat</button></div>
+                            <div class="md:col-span-2 flex justify-end"><button type="submit" id="btn-submit-surat" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2 shadow-md">Ajukan Surat</button></div>
                         </form>
                     </div>
 
@@ -420,7 +414,6 @@
                     </div>
                 </div>
 
-                <!-- -->
                 <!-- 5. KEUANGAN -->
                 <div id="dana-view" class="view-section">
                     <div class="glass-card p-6 mb-6">
@@ -467,7 +460,6 @@
                     </div>
                 </div>
 
-                <!-- -->
                 <!-- 6. KALENDER -->
                 <div id="kalender-view" class="view-section h-full">
                     <div class="glass-card p-6 h-full min-h-[600px] flex flex-col">
@@ -491,7 +483,6 @@
                     </div>
                 </div>
 
-                <!-- -->
                 <!-- 7. LAPORAN MASTER -->
                 <div id="laporan-view" class="view-section">
                     <div class="glass-card p-6 text-center max-w-lg mx-auto mt-10">
@@ -532,7 +523,6 @@
 
     <!-- Modals Area -->
 
-    <!-- -->
     <!-- MODAL BARU: JADWALKAN ABSENSI (modal-jadwal-absen) -->
     <div id="modal-jadwal-absen" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[110] hidden flex items-center justify-center p-4 opacity-0 transition-opacity">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform scale-95 transition-transform">
@@ -657,16 +647,16 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-1">Tanggal <span class="text-red-500">*</span></label>
-                        <input type="date" id="agenda-tgl" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                        <input type="date" id="agenda-tgl" required class="w-full px-3 py-2 border rounded-lg text-sm">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-1">Waktu</label>
-                        <input type="time" id="agenda-waktu" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                        <input type="time" id="agenda-waktu" class="w-full px-3 py-2 border rounded-lg text-sm">
                     </div>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-700 mb-1">Tempat / Media Pelaksanaan</label>
-                    <input type="text" id="agenda-lokasi" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Contoh: Zoom Meeting / Sekre">
+                    <input type="text" id="agenda-lokasi" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="Contoh: Zoom Meeting / Sekre">
                 </div>
                 <button type="submit" id="btn-submit-agenda" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold transition shadow-md">
                     Publikasi Kalender
@@ -850,7 +840,7 @@
                 </div>
                 <div>
                     <p class="text-[10px] text-gray-400 font-semibold uppercase">Lokasi / Media</p>
-                    <p id="detail-jadwal-lokasi" class="text-sm font-semibold text-gray-800">-</p>
+                    <p id="detail-jadwal-lokasi" class="text-sm font-semibold text-slate-800">-</p>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -913,7 +903,6 @@
         </div>
     </div>
 
-    <!-- -->
     <script>
         // --- 1. KONFIGURASI SUPABASE REALTIME & GOOGLE APPS SCRIPT ---
         const SUPABASE_URL = 'https://cfuscneunxuotqsjlpxg.supabase.co';
@@ -952,7 +941,8 @@
             kehadiranList: [], 
             notifications: [],
             absenMethod: 'camera', 
-            absenBase64: null 
+            absenBase64: null,
+            totalJadwalCount: 0
         };
 
         function showToast(message, type = 'success') {
@@ -1281,7 +1271,11 @@
 
         async function loadAllDataRealtime() {
             const { data: usersData } = await supabaseClient.from('users').select('*');
-            if(usersData) AppState.usersList = usersData;
+            if(usersData) {
+                AppState.usersList = usersData;
+                // Selalu render dropdown divisi di Task saat ada update data users
+                renderTaskDivisiDropdown();
+            }
             
             // Dapatkan jumlah total kegiatan yang terjadwal
             const { count: cJadwal } = await supabaseClient.from('jadwal_hadir').select('*', { count: 'exact', head: true });
@@ -1774,7 +1768,7 @@
                         const existingLink = task.link_hasil || '';
                         actionArea.innerHTML = `
                             <label class="block text-xs font-semibold text-gray-700 mb-1 text-left">Kumpulkan Link Docs/Drive Tugas</label>
-                            <input type="url" id="task-link-input" value="${existingLink}" placeholder="https://docs.google.com/..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-3 focus:ring-emerald-500 focus:border-emerald-500 outline-none">
+                            <input type="url" id="task-link-input" value="${existingLink}" placeholder="https://docs.google.com/..." class="w-full border border-gray-300 rounded-lg text-sm mb-3 focus:ring-emerald-500 focus:border-emerald-500 outline-none">
                             <button class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-sm font-semibold transition shadow-md" id="btn-action-task" onclick="submitUserTask('${task.id}')">Kumpulkan untuk Direview</button>
                         `;
                     } else if (task.status === 'Completed') {
@@ -2365,6 +2359,7 @@
                     fotoUrl = await uploadFileToGDrive(fileInput, '1ihCGLImAqusYJwwRMIDR364UOTWR2A2N');
                 }
 
+                // Simpan ke Supabase Kehadiran dengan real-time TIMESTAMP
                 const { error } = await supabaseClient.from('kehadiran').insert([{
                     nama: AppState.user.nama,
                     kegiatan: kegiatan,
@@ -2395,7 +2390,42 @@
                 const { data, error } = await supabaseClient.from(modul).select('*').order('created_at', { ascending: false });
                 if (error) throw error;
                 if (!data || data.length === 0) return showToast('Data kosong.', 'error');
-                const worksheet = XLSX.utils.json_to_sheet(data);
+                
+                let exportData = data;
+                
+                // JIKA MODUL ADALAH KEHADIRAN, LAKUKAN MAPPING DENGAN JADWAL_HADIR!
+                if (modul === 'kehadiran') {
+                    // Fetch data jadwal_hadir untuk digabung ke dalam Excel Kehadiran
+                    const { data: jadwalData } = await supabaseClient.from('jadwal_hadir').select('*');
+                    
+                    exportData = data.map(kh => {
+                        const jadwal = jadwalData ? jadwalData.find(j => j.nama_kegiatan.trim().toLowerCase() === kh.kegiatan.trim().toLowerCase()) : null;
+                        
+                        let durasiMenit = 0;
+                        if (jadwal && jadwal.waktu_mulai && jadwal.waktu_akhir) {
+                            const [hMulai, mMulai] = jadwal.waktu_mulai.split(':').map(Number);
+                            const [hAkhir, mAkhir] = jadwal.waktu_akhir.split(':').map(Number);
+                            const totalMulai = (hMulai * 60) + mMulai;
+                            const totalAkhir = (hAkhir * 60) + mAkhir;
+                            durasiMenit = totalAkhir - totalMulai;
+                            if (durasiMenit < 0) durasiMenit += 1440;
+                        }
+                        
+                        return {
+                            'Nama Fungsionaris': kh.nama,
+                            'Judul Kegiatan': kh.kegiatan,
+                            'Tanggal Kegiatan': jadwal ? jadwal.tanggal : '-',
+                            'Jam Mulai': jadwal ? jadwal.waktu_mulai : '-',
+                            'Jam Berakhir': jadwal ? jadwal.waktu_akhir : '-',
+                            'Total Durasi': durasiMenit ? `${durasiMenit} Menit` : '-',
+                            'Lokasi': jadwal ? (jadwal.lokasi || '-') : '-',
+                            'Waktu Check-In': kh.waktu,
+                            'Foto URL Absensi': kh.foto_url || '-'
+                        };
+                    });
+                }
+                
+                const worksheet = XLSX.utils.json_to_sheet(exportData);
                 const workbook = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan " + modul);
                 XLSX.writeFile(workbook, `Laporan_${modul}_SobatBumi_${new Date().getTime()}.xlsx`);
@@ -2470,6 +2500,11 @@
                     responsive: true, 
                     maintainAspectRatio: false, 
                     scales: { 
+                        y: {
+                            ticks: {
+                                autoSkip: false // MENAMPILKAN SELURUH NAMA ANGGOTA TANPA DILEWATI
+                            }
+                        },
                         x: { 
                             type: 'linear',
                             position: 'bottom',
@@ -2493,7 +2528,12 @@
         }
 
         // Utilities
-        function openModal(id) { const m = document.getElementById(id); m.classList.remove('hidden'); setTimeout(()=>{m.classList.remove('opacity-0'); m.firstElementChild.classList.remove('scale-95');}, 10); }
+        function openModal(id) { 
+            if (id === 'modal-task') {
+                renderTaskDivisiDropdown();
+            }
+            const m = document.getElementById(id); m.classList.remove('hidden'); setTimeout(()=>{m.classList.remove('opacity-0'); m.firstElementChild.classList.remove('scale-95');}, 10); 
+        }
         function closeModal(id) { const m = document.getElementById(id); m.classList.add('opacity-0'); m.firstElementChild.classList.add('scale-95'); setTimeout(()=>m.classList.add('hidden'), 300); }
         function toggleNotifications() { document.getElementById('notif-dropdown').classList.toggle('hidden'); }
         function toggleProfileMenu() { document.getElementById('profile-dropdown').classList.toggle('hidden'); }
